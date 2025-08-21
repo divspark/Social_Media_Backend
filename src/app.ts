@@ -20,5 +20,8 @@ app.use("/api/comment",verifyFirebaseToken,checkBlockedUser,commentRoute);
 app.use("/api/notifications",verifyFirebaseToken,checkBlockedUser,checkFeatureAccess("notification"), notificationRoutes);
 app.use("/api/daily-message",verifyFirebaseToken, dailyMessageRoutes);
 app.use("/api/whatsapp", whatsappRoutes);
+app.get("/", (req, res) => {
+    res.send("Api Service is healthy!");
+});
 
 export default app;
