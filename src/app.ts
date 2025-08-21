@@ -1,4 +1,5 @@
 import express from "express";
+import cors from "cors";
 import AuthRoutes from "./routes/authRoutes"; 
 import postRoutes from "./routes/postRoutes"; 
 import commentRoute from "./routes/commentRoutes"
@@ -13,6 +14,8 @@ dotenv.config();
 const app = express();
 
 app.use(express.json());
+
+app.use(cors());
 
 app.use("/api/auth",AuthRoutes);
 app.use("/api/post",verifyFirebaseToken,postRoutes);

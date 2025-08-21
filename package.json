@@ -15,6 +15,7 @@
     "@types/node-cron": "^3.0.11",
     "aws-sdk": "^2.1692.0",
     "cloudinary": "^2.7.0",
+    "cors": "^2.8.5",
     "dayjs": "^1.11.13",
     "dotenv": "^17.0.1",
     "express": "^5.1.0",
@@ -26,6 +27,7 @@
     "twilio": "^5.8.0"
   },
   "devDependencies": {
+    "@types/cors": "^2.8.19",
     "@types/express": "^5.0.3",
     "@types/mongoose": "^5.11.96",
     "@types/multer": "^2.0.0",
