@@ -61,7 +61,7 @@ const createPost = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
                         quality: "auto:good",
                     }, (error, result) => {
                         if (error || !result) {
-                            console.error("❌ Image upload error:", error);
+                            console.error("Image upload error:", error);
                             reject("Image upload failed");
                         }
                         else {
@@ -88,7 +88,7 @@ const createPost = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
                     eager_async: true,
                 }, (error, result) => {
                     if (error || !result) {
-                        console.error("🚨 Cloudinary video upload error:", error);
+                        console.error("Cloudinary video upload error:", error);
                         reject("Video upload failed");
                     }
                     else {
@@ -113,7 +113,7 @@ const createPost = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
                     format: "webp",
                 }, (error, result) => {
                     if (error || !result) {
-                        console.error("❌ Thumbnail upload error:", error);
+                        console.error("Thumbnail upload error:", error);
                         reject("Thumbnail upload failed");
                     }
                     else {

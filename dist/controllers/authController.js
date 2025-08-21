@@ -15,7 +15,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.getRestrictedUsers = exports.setUserRestrictions = exports.getBlockedUsers = exports.blockOrUnblockUser = exports.saveFcmToken = exports.getUserProfileByUID = exports.updateOwnProfile = exports.getOwnProfile = exports.completeProfile = exports.phoneLoginOrCreate = exports.googleLoginOrCreate = void 0;
 const firebase_1 = __importDefault(require("../config/firebase"));
 const userModel_1 = __importDefault(require("../models/userModel"));
-const cloudinary_1 = __importDefault(require("../utils/cloudinary"));
+const cloudinaryService_1 = require("../services/cloudinaryService");
 // login with google
 // GOOGLE LOGIN
 const googleLoginOrCreate = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -98,18 +98,7 @@ const completeProfile = (req, res) => __awaiter(void 0, void 0, void 0, function
         }
         let photoURL;
         if ((_b = req.file) === null || _b === void 0 ? void 0 : _b.buffer) {
-            photoURL = yield new Promise((resolve, reject) => {
-                const stream = cloudinary_1.default.uploader.upload_stream({
-                    resource_type: "image",
-                    folder: "profile_pics",
-                }, (error, result) => {
-                    if (error || !result)
-                        reject("Upload failed");
-                    else
-                        resolve(result.secure_url);
-                });
-                stream.end(req.file.buffer);
-            });
+            photoURL = yield (0, cloudinaryService_1.uploadProfileImage)(req.file.buffer, "profile_pics");
         }
         const updatedUser = yield userModel_1.default.findByIdAndUpdate(userId, Object.assign({ name,
             email,
@@ -146,18 +135,7 @@ const updateOwnProfile = (req, res) => __awaiter(void 0, void 0, void 0, functio
     try {
         let photoURL;
         if ((_b = req.file) === null || _b === void 0 ? void 0 : _b.buffer) {
-            photoURL = yield new Promise((resolve, reject) => {
-                const stream = cloudinary_1.default.uploader.upload_stream({
-                    resource_type: "image",
-                    folder: "profile_pics",
-                }, (error, result) => {
-                    if (error || !result)
-                        reject("Upload failed");
-                    else
-                        resolve(result.secure_url);
-                });
-                stream.end(req.file.buffer);
-            });
+            photoURL = yield (0, cloudinaryService_1.uploadProfileImage)(req.file.buffer, "profile_pics");
         }
         const updateFields = Object.assign(Object.assign(Object.assign(Object.assign({}, (name && { name })), (email && { email })), (address && { address })), (photoURL && { photoURL }));
         if (role && ["user", "admin"].includes(role)) {

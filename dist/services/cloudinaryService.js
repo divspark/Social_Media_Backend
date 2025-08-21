@@ -12,20 +12,17 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const mongoose_1 = __importDefault(require("mongoose"));
-const connectDB = () => __awaiter(void 0, void 0, void 0, function* () {
-    const uri = process.env.MONGO_URI;
-    if (!uri) {
-        console.error(" MONGO_URI is not defined in the .env file");
-        process.exit(1);
-    }
-    try {
-        yield mongoose_1.default.connect(uri);
-        console.log("MongoDB connected successfully");
-    }
-    catch (error) {
-        console.error(" MongoDB connection error:", error);
-        process.exit(1); // Exit to avoid running app without DB
-    }
+exports.uploadProfileImage = void 0;
+const cloudinary_1 = __importDefault(require("../utils/cloudinary"));
+const uploadProfileImage = (fileBuffer_1, ...args_1) => __awaiter(void 0, [fileBuffer_1, ...args_1], void 0, function* (fileBuffer, folder = "profile_pics") {
+    return new Promise((resolve, reject) => {
+        const stream = cloudinary_1.default.uploader.upload_stream({ resource_type: "image", folder }, (error, result) => {
+            if (error || !result)
+                reject(error || "Upload failed");
+            else
+                resolve(result.secure_url);
+        });
+        stream.end(fileBuffer);
+    });
 });
-exports.default = connectDB;
+exports.uploadProfileImage = uploadProfileImage;

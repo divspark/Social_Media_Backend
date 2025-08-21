@@ -49,7 +49,7 @@ const getNotifications = (req, res) => {
         res.status(200).json({ notifications: grouped });
     })
         .catch(error => {
-        console.error("❌ Failed to fetch notifications:", error);
+        console.error("Failed to fetch notifications:", error);
         res.status(500).json({ message: "Failed to fetch notifications", error });
     });
 };
@@ -71,7 +71,7 @@ const markAsRead = (req, res) => {
         });
     })
         .catch(error => {
-        console.error("❌ Failed to mark as read:", error);
+        console.error("Failed to mark as read:", error);
         res.status(500).json({ message: "Failed to mark as read", error });
     });
 };
@@ -92,7 +92,7 @@ const markAllAsRead = (req, res) => {
         });
     })
         .catch(error => {
-        console.error("❌ Error marking all notifications as read:", error);
+        console.error("Error marking all notifications as read:", error);
         res.status(500).json({
             success: false,
             message: "Failed to mark all notifications as read",

@@ -38,7 +38,7 @@ const mongoose_1 = __importStar(require("mongoose"));
 const otpSchema = new mongoose_1.Schema({
     phoneNumber: { type: String, required: true, index: true },
     otp: { type: String, required: true },
-    expiresAt: { type: Date, required: true } // REMOVE 'index: true' here!
+    expiresAt: { type: Date, required: true }
 }, { timestamps: true });
 // Only add the TTL index ONCE
 otpSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
