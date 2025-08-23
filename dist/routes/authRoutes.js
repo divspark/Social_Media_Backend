@@ -30,4 +30,5 @@ router.get("/getAllblockedUser", middlewares_1.verifyToken, middlewares_1.requir
 router.post("/restrict", middlewares_1.verifyToken, middlewares_1.requireAdmin, authController_1.setUserRestrictions);
 //  Get All Users With Restrictions
 router.get("/getRestricted-users", middlewares_1.verifyToken, middlewares_1.requireAdmin, authController_1.getRestrictedUsers);
+router.put("/users/:userId/role", middlewares_1.verifyToken, middlewares_1.requireAdmin, authController_1.updateUserRole);
 exports.default = router;

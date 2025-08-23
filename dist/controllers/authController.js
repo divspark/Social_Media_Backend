@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getRestrictedUsers = exports.setUserRestrictions = exports.getBlockedUsers = exports.blockOrUnblockUser = exports.saveFcmToken = exports.getUserProfileByUID = exports.updateOwnProfile = exports.getOwnProfile = exports.completeProfile = exports.phoneLoginOrCreate = exports.googleLoginOrCreate = void 0;
+exports.updateUserRole = exports.getRestrictedUsers = exports.setUserRestrictions = exports.getBlockedUsers = exports.blockOrUnblockUser = exports.saveFcmToken = exports.getUserProfileByUID = exports.updateOwnProfile = exports.getOwnProfile = exports.completeProfile = exports.phoneLoginOrCreate = exports.googleLoginOrCreate = void 0;
 const firebase_1 = __importDefault(require("../config/firebase"));
 const userModel_1 = __importDefault(require("../models/userModel"));
 const cloudinaryService_1 = require("../services/cloudinaryService");
@@ -88,15 +88,11 @@ exports.phoneLoginOrCreate = phoneLoginOrCreate;
 // COMPLETE PROFILE (Second Form)
 const completeProfile = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a, _b;
-    const { name, email, address, role } = req.body;
+    const { name, email, address } = req.body;
     const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a._id;
     try {
         if (!userId) {
             res.status(400).json({ message: "Invalid user ID" });
-            return;
-        }
-        if (!["user", "admin"].includes(role)) {
-            res.status(400).json({ message: "Invalid role. Must be 'user' or 'admin'" });
             return;
         }
         let photoURL;
@@ -105,8 +101,7 @@ const completeProfile = (req, res) => __awaiter(void 0, void 0, void 0, function
         }
         const updatedUser = yield userModel_1.default.findByIdAndUpdate(userId, Object.assign({ name,
             email,
-            address,
-            role }, (photoURL && { photoURL })), { new: true });
+            address, role: "user" }, (photoURL && { photoURL })), { new: true });
         res.status(200).json({ message: "Profile completed", user: updatedUser });
     }
     catch (err) {
@@ -133,7 +128,7 @@ exports.getOwnProfile = getOwnProfile;
 // UPDATE OWN PROFILE (Edit Later)
 const updateOwnProfile = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a, _b;
-    const { name, email, address, role } = req.body;
+    const { name, email, address } = req.body;
     const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a._id;
     try {
         let photoURL;
@@ -141,9 +136,6 @@ const updateOwnProfile = (req, res) => __awaiter(void 0, void 0, void 0, functio
             photoURL = yield (0, cloudinaryService_1.uploadProfileImage)(req.file.buffer, "profile_pics");
         }
         const updateFields = Object.assign(Object.assign(Object.assign(Object.assign({}, (name && { name })), (email && { email })), (address && { address })), (photoURL && { photoURL }));
-        if (role && ["user", "admin"].includes(role)) {
-            updateFields.role = role;
-        }
         const updatedUser = yield userModel_1.default.findByIdAndUpdate(userId, updateFields, { new: true });
         res.status(200).json({ message: "Profile updated", user: updatedUser });
     }
@@ -268,3 +260,34 @@ const getRestrictedUsers = (_req, res) => __awaiter(void 0, void 0, void 0, func
     }
 });
 exports.getRestrictedUsers = getRestrictedUsers;
+const updateUserRole = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
+    const { userId } = req.params;
+    const { role } = req.body;
+    try {
+        // Allow only admins to change role
+        if (((_a = req.user) === null || _a === void 0 ? void 0 : _a.role) !== "admin") {
+            res.status(403).json({ message: "Forbidden: Only admins can change roles" });
+            return;
+        }
+        // Validate role
+        if (!role || !["user", "admin"].includes(role)) {
+            res.status(400).json({ message: "Invalid role. Must be 'user' or 'admin'." });
+            return;
+        }
+        // Update role
+        const updatedUser = yield userModel_1.default.findByIdAndUpdate(userId, { role }, { new: true });
+        if (!updatedUser) {
+            res.status(404).json({ message: "User not found" });
+            return;
+        }
+        res.status(200).json({
+            message: "User role updated successfully",
+            user: updatedUser,
+        });
+    }
+    catch (err) {
+        res.status(500).json({ message: "Failed to update user role", error: err });
+    }
+});
+exports.updateUserRole = updateUserRole;

@@ -14,6 +14,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.sendOtp = sendOtp;
 exports.verifyOtpController = verifyOtpController;
+exports.logoutController = logoutController;
 const whatsappApi_1 = require("../models/whatsappApi");
 const whatsappOtpModel_1 = require("../models/whatsappOtpModel");
 const whatsappOtp_1 = require("../utils/whatsappOtp");
@@ -125,6 +126,23 @@ function verifyOtpController(req, res) {
         catch (err) {
             console.error("[VERIFY OTP ERROR]", err);
             res.status(500).json({ error: "Internal error" });
+        }
+    });
+}
+function logoutController(req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            res.clearCookie("auth_token", {
+                httpOnly: true,
+                secure: true,
+                sameSite: "strict",
+                path: "/",
+            });
+            res.status(200).json({ message: "Logged out successfully" });
+        }
+        catch (err) {
+            console.error("Logout error:", err);
+            res.status(500).json({ error: "Internal server error" });
         }
     });
 }

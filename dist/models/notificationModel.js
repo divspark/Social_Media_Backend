@@ -41,7 +41,7 @@ const notificationSchema = new mongoose_1.Schema({
     commentId: { type: mongoose_1.Schema.Types.ObjectId, ref: "Comment" },
     type: {
         type: String,
-        enum: ["like", "comment", "reply", "like-comment"],
+        enum: ["like", "comment", "reply", "like-comment", "save"],
         required: true,
     },
     isRead: { type: Boolean, default: false },
