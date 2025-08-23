@@ -633,7 +633,7 @@ const getPostAnalytics = (req, res) => __awaiter(void 0, void 0, void 0, functio
             return;
         }
         if (post.adminId.toString() !== adminId.toString()) {
-            res.status(403).json({ message: "Unauthorized access" });
+            res.status(403).json({ message: "Access denied. Only the post owner can view analytics." });
             return;
         }
         // Format viewDetails

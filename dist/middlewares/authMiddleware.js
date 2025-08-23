@@ -16,19 +16,27 @@ exports.requireUser = exports.requireAdmin = exports.verifyToken = void 0;
 const firebase_1 = __importDefault(require("../config/firebase"));
 const userModel_1 = __importDefault(require("../models/userModel"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
-const JWT_SECRET = process.env.JWT_SECRET || "supersecret";
+const JWT_SECRET = process.env.JWT_SECRET;
 const verifyToken = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-        res.status(401).json({ message: "Unauthorized: Token missing" });
-        return;
-    }
-    let token = authHeader.split(" ")[1];
+    var _a;
     try {
-        // 🔹 Phone login flow
+        let token;
+        // First, check Authorization header
+        const authHeader = req.headers.authorization;
+        if (authHeader === null || authHeader === void 0 ? void 0 : authHeader.startsWith("Bearer ")) {
+            token = authHeader.split(" ")[1];
+        }
+        // If not in header, check cookie
+        if (!token && ((_a = req.cookies) === null || _a === void 0 ? void 0 : _a.auth_token)) {
+            token = req.cookies.auth_token;
+        }
+        if (!token) {
+            res.status(401).json({ message: "Unauthorized: Token missing" });
+            return;
+        }
+        // Phone flow
         if (token.startsWith("phone_")) {
-            token = token.replace("phone_", ""); // remove prefix
-            const decoded = jsonwebtoken_1.default.verify(token, JWT_SECRET);
+            const decoded = jsonwebtoken_1.default.verify(token.replace("phone_", ""), JWT_SECRET);
             const user = yield userModel_1.default.findOne({ phone: decoded.phone });
             if (!user) {
                 res.status(401).json({ message: "Unauthorized: User not found" });

@@ -5,7 +5,7 @@ import { generateOTP, canSendOtp } from "../utils/whatsappOtp";
 import User from "../models/userModel";
 import jwt from "jsonwebtoken";
 
-const JWT_SECRET = process.env.JWT_SECRET || "supersecret";
+const JWT_SECRET = process.env.JWT_SECRET;
 
 /**
  * POST /api/whatsapp/send-otp
@@ -107,11 +107,20 @@ export async function verifyOtpController(req: Request, res: Response): Promise<
       role: user.role,
     };
 
-    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: "7d" });
+    const rawToken = jwt.sign(payload, JWT_SECRET!, { noTimestamp: true });
+    const token = `phone_${rawToken}`;
+
+    // Set JWT in secure httpOnly cookie
+    res.cookie("auth_token", token, {
+      httpOnly: true,
+      secure: true, // ensure HTTPS in production
+      sameSite: "strict",
+      path: "/",
+    });
 
     res.status(200).json({
       message: "OTP verified successfully",
-      token:`phone_${token}`,
+      token,
       phone: mobile,
       role: user.role,
       type: "phone"

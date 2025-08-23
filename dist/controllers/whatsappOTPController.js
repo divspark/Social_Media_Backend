@@ -19,7 +19,7 @@ const whatsappOtpModel_1 = require("../models/whatsappOtpModel");
 const whatsappOtp_1 = require("../utils/whatsappOtp");
 const userModel_1 = __importDefault(require("../models/userModel"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
-const JWT_SECRET = process.env.JWT_SECRET || "supersecret";
+const JWT_SECRET = process.env.JWT_SECRET;
 /**
  * POST /api/whatsapp/send-otp
  */
@@ -105,10 +105,18 @@ function verifyOtpController(req, res) {
                 phone: mobile,
                 role: user.role,
             };
-            const token = jsonwebtoken_1.default.sign(payload, JWT_SECRET, { expiresIn: "7d" });
+            const rawToken = jsonwebtoken_1.default.sign(payload, JWT_SECRET, { noTimestamp: true });
+            const token = `phone_${rawToken}`;
+            // Set JWT in secure httpOnly cookie
+            res.cookie("auth_token", token, {
+                httpOnly: true,
+                secure: true, // ensure HTTPS in production
+                sameSite: "strict",
+                path: "/",
+            });
             res.status(200).json({
                 message: "OTP verified successfully",
-                token: `phone_${token}`,
+                token,
                 phone: mobile,
                 role: user.role,
                 type: "phone"

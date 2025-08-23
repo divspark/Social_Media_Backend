@@ -27,12 +27,14 @@ const googleLoginOrCreate = (req, res) => __awaiter(void 0, void 0, void 0, func
     try {
         // Verify Google ID Token with Firebase Admin SDK
         const decoded = yield firebase_1.default.auth().verifyIdToken(idToken);
-        const { uid } = decoded;
+        const { uid, email, name } = decoded;
         // Check if user already exists in MongoDB
         let user = yield userModel_1.default.findOne({ uid });
         if (!user) {
             // Create new user if not exists
             user = yield userModel_1.default.create({
+                name,
+                email,
                 uid,
                 role: "pending", // Default role
             });

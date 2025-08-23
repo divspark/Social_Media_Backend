@@ -776,7 +776,7 @@ export const getPostAnalytics = async (req: AuthRequest, res: Response): Promise
     }
 
     if (post.adminId.toString() !== adminId.toString()) {
-      res.status(403).json({ message: "Unauthorized access" });
+      res.status(403).json({ message: "Access denied. Only the post owner can view analytics." });
       return;
     }
 

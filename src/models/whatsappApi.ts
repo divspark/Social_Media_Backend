@@ -37,7 +37,6 @@ export async function sendOtpWhatsapp(
     });
 
     const d = response.data;
-    console.log("Response",d)
     if (
       (d && d.status && d.status === "success") ||
       (d && d.Message && typeof d.Message === "string" && d.Message.toLowerCase().includes("success"))

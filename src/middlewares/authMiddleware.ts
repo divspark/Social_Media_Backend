@@ -3,7 +3,7 @@ import admin from "../config/firebase";
 import User from "../models/userModel";
 import jwt from "jsonwebtoken";
 
-const JWT_SECRET = process.env.JWT_SECRET || "supersecret";
+const JWT_SECRET = process.env.JWT_SECRET;
 
 declare module "express-serve-static-core" {
   interface Request {
@@ -12,23 +12,32 @@ declare module "express-serve-static-core" {
 }
 
 export const verifyToken = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-  const authHeader = req.headers.authorization;
-
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    res.status(401).json({ message: "Unauthorized: Token missing" });
-    return;
-  }
-
-  let token = authHeader.split(" ")[1];
-
-  console.log("token",token)
-
   try {
-    // 🔹 Phone login flow
-    if (token.startsWith("phone_")) {
-      token = token.replace("phone_", ""); // remove prefix
+    let token: string | undefined;
 
-      const decoded = jwt.verify(token, JWT_SECRET) as { id: string; phone: string; role: string };
+    // First, check Authorization header
+    const authHeader = req.headers.authorization;
+    if (authHeader?.startsWith("Bearer ")) {
+      token = authHeader.split(" ")[1];
+    }
+
+    // If not in header, check cookie
+    if (!token && req.cookies?.auth_token) {
+      token = req.cookies.auth_token;
+    }
+
+    if (!token) {
+      res.status(401).json({ message: "Unauthorized: Token missing" });
+      return;
+    }
+
+    // Phone flow
+    if (token.startsWith("phone_")) {
+      const decoded = jwt.verify(token.replace("phone_", ""), JWT_SECRET!) as {
+        id: string;
+        phone: string;
+        role: string;
+      };
 
       const user = await User.findOne({ phone: decoded.phone });
       if (!user) {

@@ -21,7 +21,7 @@ export const googleLoginOrCreate = async (req: Request, res: Response): Promise<
   try {
     // Verify Google ID Token with Firebase Admin SDK
     const decoded = await admin.auth().verifyIdToken(idToken);
-    const { uid } = decoded;
+    const { uid, email, name } = decoded;
 
     // Check if user already exists in MongoDB
     let user = await User.findOne({ uid });
@@ -29,6 +29,8 @@ export const googleLoginOrCreate = async (req: Request, res: Response): Promise<
     if (!user) {
       // Create new user if not exists
       user = await User.create({
+        name,
+        email,
         uid,
         role: "pending", // Default role
       });
