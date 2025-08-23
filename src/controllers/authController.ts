@@ -4,7 +4,7 @@ import User from "../models/userModel";
 import { uploadProfileImage } from "../services/cloudinaryService";
 
 export interface AuthRequest extends Request {
-  user?: { _id: string };
+  user?: { _id: string,role: "admin" | "user" };
   file?: Express.Multer.File;
 }
 
@@ -88,7 +88,7 @@ export const phoneLoginOrCreate = async (req: Request, res: Response): Promise<v
 
 // COMPLETE PROFILE (Second Form)
 export const completeProfile = async (req: AuthRequest, res: Response): Promise<void> => {
-  const { name, email, address, role } = req.body;
+  const { name, email, address } = req.body;
   const userId = req.user?._id;
 
   try {
@@ -97,10 +97,6 @@ export const completeProfile = async (req: AuthRequest, res: Response): Promise<
       return;
     }
 
-    if (!["user", "admin"].includes(role)) {
-      res.status(400).json({ message: "Invalid role. Must be 'user' or 'admin'" });
-      return;
-    }
 
     let photoURL: string | undefined;
 
@@ -114,7 +110,7 @@ export const completeProfile = async (req: AuthRequest, res: Response): Promise<
         name,
         email,
         address,
-        role,
+        role:"user",
         ...(photoURL && { photoURL }),
       },
       { new: true }
@@ -144,7 +140,7 @@ export const getOwnProfile = async (req: AuthRequest, res: Response): Promise<vo
 
 // UPDATE OWN PROFILE (Edit Later)
 export const updateOwnProfile = async (req: AuthRequest, res: Response): Promise<void> => {
-  const { name, email, address, role } = req.body;
+  const { name, email, address } = req.body;
   const userId = req.user?._id;
 
   try {
@@ -160,10 +156,6 @@ export const updateOwnProfile = async (req: AuthRequest, res: Response): Promise
       ...(address && { address }),
       ...(photoURL && { photoURL }),
     };
-
-    if (role && ["user", "admin"].includes(role)) {
-      updateFields.role = role;
-    }
 
     const updatedUser = await User.findByIdAndUpdate(userId, updateFields, { new: true });
 
@@ -305,5 +297,43 @@ export const getRestrictedUsers = async (_req: Request, res: Response): Promise<
     res.status(200).json({ restrictedUsers: users });
   } catch (err) {
     res.status(500).json({ message: "Failed to fetch restricted users", error: err });
+  }
+};
+
+export const updateUserRole = async (req: AuthRequest, res: Response): Promise<void> => {
+  const { userId } = req.params;
+  const { role } = req.body;
+
+  try {
+    // Allow only admins to change role
+    if (req.user?.role !== "admin") {
+      res.status(403).json({ message: "Forbidden: Only admins can change roles" });
+      return;
+    }
+
+    // Validate role
+    if (!role || !["user", "admin"].includes(role)) {
+      res.status(400).json({ message: "Invalid role. Must be 'user' or 'admin'." });
+      return;
+    }
+
+    // Update role
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { role },
+      { new: true }
+    );
+
+    if (!updatedUser) {
+      res.status(404).json({ message: "User not found" });
+      return;
+    }
+
+    res.status(200).json({
+      message: "User role updated successfully",
+      user: updatedUser,
+    });
+  } catch (err) {
+    res.status(500).json({ message: "Failed to update user role", error: err });
   }
 };

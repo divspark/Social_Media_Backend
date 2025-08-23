@@ -11,6 +11,7 @@ import {
   getBlockedUsers,
   setUserRestrictions,
   getRestrictedUsers,
+  updateUserRole,
 } from "../controllers/authController";
 import { requireAdmin, verifyToken,checkFeatureAccess } from "../middlewares";
 import multer from "multer";
@@ -42,6 +43,8 @@ router.get("/getAllblockedUser", verifyToken, requireAdmin, getBlockedUsers);
 router.post("/restrict", verifyToken, requireAdmin, setUserRestrictions);
 //  Get All Users With Restrictions
 router.get("/getRestricted-users", verifyToken, requireAdmin, getRestrictedUsers);
+
+router.put("/users/:userId/role", verifyToken,requireAdmin, updateUserRole);
 
 
 
