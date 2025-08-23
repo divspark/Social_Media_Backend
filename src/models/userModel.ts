@@ -6,6 +6,7 @@ export interface IUser extends Document {
   name: string;
   email: string;
   photoURL?: string;
+  phone: string;
   role: "user" | "admin" | "pending";
   address?: string;
   fcmToken?: string;
@@ -21,10 +22,11 @@ export interface IUser extends Document {
 
 const userSchema = new Schema<IUser>(
   {
-    uid: { type: String, required: true, unique: true },
+    uid: String,
     name: String,
     email: String,
     photoURL: String,
+    phone: String,
     address: { type: String },
     role: { type: String, enum: ["user", "admin", "pending"], default: "user" },
     fcmToken: { type: String },

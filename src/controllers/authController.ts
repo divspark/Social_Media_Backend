@@ -45,6 +45,7 @@ export const googleLoginOrCreate = async (req: Request, res: Response): Promise<
       message: `${user.role} Google login successful`,
       user,
       idToken,
+      type:"google",
     });
   } catch (err) {
     console.error("Google login error:", err);

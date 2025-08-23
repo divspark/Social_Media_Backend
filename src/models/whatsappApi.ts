@@ -1,36 +1,51 @@
 import axios from "axios";
+import { generateOTP } from "../utils/whatsappOtp";
+
+const wid = process.env.WID || "";
+const countryCode = process.env.COUNTRY_CODE || "";
 
 /**
  * Call Authkey WhatsApp API to send the OTP.
- * Accepts both { status: "success" } or { Message: "...success..." }
+ * Using POST JSON API with type = "copy_code"
  */
-export function sendOtpWhatsapp(
-  authkey: string,
+export async function sendOtpWhatsapp(
   mobile: string,
-  countryCode: string,
-  wid: string,
-  name: string,
-  otp: string
+  otp: number,
 ): Promise<void> {
-  const apiUrl = "https://api.authkey.io/request";
-  const params = {
-    authkey,
-    mobile,
+  const apiUrl = "https://console.authkey.io/restapi/requestjson.php";
+  const authkey = process.env.AUTHKEY;
+
+
+  if (!authkey) {
+    throw new Error("AUTHKEY is not set in environment variables");
+  }
+
+  const payload = {
     country_code: countryCode,
+    mobile,
     wid,
-    name,
-    otp
+    type: "copy_code",
+    bodyValues: { "1": otp },
   };
 
-  return axios.get(apiUrl, { params })
-    .then(response => {
-      const d = response.data;
-      if (
-        (d && d.status && d.status === "success") ||
-        (d && d.Message && typeof d.Message === "string" && d.Message.toLowerCase().includes("success"))
-      ) {
-        return;
-      }
-      return Promise.reject(d || { error: "Unknown error" });
+  try {
+    const response = await axios.post(apiUrl, payload, {
+      headers: {
+        Authorization: `Basic ${authkey}`,
+        "Content-Type": "application/json",
+      },
     });
+
+    const d = response.data;
+    console.log("Response",d)
+    if (
+      (d && d.status && d.status === "success") ||
+      (d && d.Message && typeof d.Message === "string" && d.Message.toLowerCase().includes("success"))
+    ) {
+      return;
+    }
+    throw d || { error: "Unknown error" };
+  } catch (err) {
+    throw err;
+  }
 }

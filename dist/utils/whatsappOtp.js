@@ -6,7 +6,7 @@ const whatsappOtpModel_1 = require("../models/whatsappOtpModel");
  * Generates a random 6-digit OTP and 60-second expiry timestamp.
  */
 const generateOTP = () => {
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otp = Math.floor(100000 + Math.random() * 900000);
     const expiresAt = new Date(Date.now() + 60 * 1000);
     return { otp, expiresAt };
 };

@@ -35,10 +35,11 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importStar(require("mongoose"));
 const userSchema = new mongoose_1.Schema({
-    uid: { type: String, required: true, unique: true },
+    uid: String,
     name: String,
     email: String,
     photoURL: String,
+    phone: String,
     address: { type: String },
     role: { type: String, enum: ["user", "admin", "pending"], default: "user" },
     fcmToken: { type: String },

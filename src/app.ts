@@ -7,7 +7,7 @@ import notificationRoutes from "./routes/notification";
 import dailyMessageRoutes from "./routes/dailyMessageRoutes";
 import whatsappRoutes from "./routes/whatsappOTPRoute";
 import dotenv from "dotenv";
-import { verifyFirebaseToken,checkBlockedUser,checkFeatureAccess } from "./middlewares";
+import { verifyToken,checkBlockedUser,checkFeatureAccess } from "./middlewares";
 
 dotenv.config();
 
@@ -18,10 +18,10 @@ app.use(express.json());
 app.use(cors());
 
 app.use("/api/auth",AuthRoutes);
-app.use("/api/post",verifyFirebaseToken,postRoutes);
-app.use("/api/comment",verifyFirebaseToken,checkBlockedUser,commentRoute);
-app.use("/api/notifications",verifyFirebaseToken,checkBlockedUser,checkFeatureAccess("notification"), notificationRoutes);
-app.use("/api/daily-message",verifyFirebaseToken, dailyMessageRoutes);
+app.use("/api/post",verifyToken,postRoutes);
+app.use("/api/comment",verifyToken,checkBlockedUser,commentRoute);
+app.use("/api/notifications",verifyToken,checkBlockedUser,checkFeatureAccess("notification"), notificationRoutes);
+app.use("/api/daily-message",verifyToken, dailyMessageRoutes);
 app.use("/api/whatsapp", whatsappRoutes);
 app.get("/", (req, res) => {
     res.send("Api Service is healthy!");

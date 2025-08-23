@@ -18,10 +18,10 @@ const app = (0, express_1.default)();
 app.use(express_1.default.json());
 app.use((0, cors_1.default)());
 app.use("/api/auth", authRoutes_1.default);
-app.use("/api/post", middlewares_1.verifyFirebaseToken, postRoutes_1.default);
-app.use("/api/comment", middlewares_1.verifyFirebaseToken, middlewares_1.checkBlockedUser, commentRoutes_1.default);
-app.use("/api/notifications", middlewares_1.verifyFirebaseToken, middlewares_1.checkBlockedUser, (0, middlewares_1.checkFeatureAccess)("notification"), notification_1.default);
-app.use("/api/daily-message", middlewares_1.verifyFirebaseToken, dailyMessageRoutes_1.default);
+app.use("/api/post", middlewares_1.verifyToken, postRoutes_1.default);
+app.use("/api/comment", middlewares_1.verifyToken, middlewares_1.checkBlockedUser, commentRoutes_1.default);
+app.use("/api/notifications", middlewares_1.verifyToken, middlewares_1.checkBlockedUser, (0, middlewares_1.checkFeatureAccess)("notification"), notification_1.default);
+app.use("/api/daily-message", middlewares_1.verifyToken, dailyMessageRoutes_1.default);
 app.use("/api/whatsapp", whatsappOTPRoute_1.default);
 app.get("/", (req, res) => {
     res.send("Api Service is healthy!");

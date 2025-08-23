@@ -3,8 +3,8 @@ import { OTPModel } from '../models/whatsappOtpModel';
 /**
  * Generates a random 6-digit OTP and 60-second expiry timestamp.
  */
-export const generateOTP = (): { otp: string; expiresAt: Date } => {
-  const otp = Math.floor(100000 + Math.random() * 900000).toString();
+export const generateOTP = (): { otp: number; expiresAt: Date } => {
+  const otp = Math.floor(100000 + Math.random() * 900000);
   const expiresAt = new Date(Date.now() + 60 * 1000);
   return { otp, expiresAt };
 };

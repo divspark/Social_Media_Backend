@@ -47,6 +47,7 @@ const googleLoginOrCreate = (req, res) => __awaiter(void 0, void 0, void 0, func
             message: `${user.role} Google login successful`,
             user,
             idToken,
+            type: "google",
         });
     }
     catch (err) {

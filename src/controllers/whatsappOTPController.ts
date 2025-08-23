@@ -2,21 +2,30 @@ import { Request, Response } from "express";
 import { sendOtpWhatsapp } from "../models/whatsappApi";
 import { OTPModel } from "../models/whatsappOtpModel";
 import { generateOTP, canSendOtp } from "../utils/whatsappOtp";
+import User from "../models/userModel";
+import jwt from "jsonwebtoken";
 
-// Always use env
-const authkey = process.env.AUTHKEY || "";
-const wid = process.env.WID || "";
-const countryCode = process.env.COUNTRY_CODE || "";
+const JWT_SECRET = process.env.JWT_SECRET || "supersecret";
 
 /**
  * POST /api/whatsapp/send-otp
  */
-export function sendOtp(req: Request, res: Response): void {
-  const { mobile, name } = req.body;
-  if (!mobile || !name) {
+export async function sendOtp(req: Request, res: Response): Promise<void> {
+  const { mobile } = req.body;
+  if (!mobile) {
     res.status(400).json({ error: "Missing required fields" });
     return;
   }
+
+  let user = await User.findOne({ phone:mobile });
+  
+  if (!user) {
+    user = await User.create({
+      phone:mobile,
+      role: "pending"
+    });
+    console.log("Created User Successfully")
+  }      
 
   canSendOtp(mobile)
     .then((canSend) => {
@@ -34,12 +43,8 @@ export function sendOtp(req: Request, res: Response): void {
 
       // Pass proper template vars according to Authkey template placeholders
       return sendOtpWhatsapp(
-        authkey,
         mobile,
-        countryCode,
-        wid,
-        name, // will be mapped to var1 or correct placeholder
-        otp   // will be mapped to var2 or correct placeholder
+        otp,
       )
         .then(() => OTPModel.create({ phoneNumber: mobile, otp, expiresAt }))
         .then(() =>
@@ -65,28 +70,54 @@ export function sendOtp(req: Request, res: Response): void {
 /**
  * POST /api/whatsapp/verify-otp
  */
-export function verifyOtpController(req: Request, res: Response): void {
+export async function verifyOtpController(req: Request, res: Response): Promise<void> {
   const { mobile, otp } = req.body;
   if (!mobile || !otp) {
     res.status(400).json({ error: "Missing required fields" });
     return;
   }
 
-  OTPModel.findOne({ phoneNumber: mobile, otp })
-    .then((record) => {
-      if (!record) return res.status(400).json({ error: "Invalid OTP" });
-      if (record.expiresAt.getTime() < Date.now()) {
-        OTPModel.deleteOne({ _id: record._id }).then(() => {
-          res.status(400).json({ error: "OTP expired" });
-        });
-        return;
-      }
-      OTPModel.deleteOne({ _id: record._id }).then(() => {
-        res.status(200).json({ message: "OTP verified successfully" });
-      });
-    })
-    .catch((err) => {
-      console.error("[VERIFY OTP ERROR]", err);
-      res.status(500).json({ error: "Internal error" });
+  try {
+    const record = await OTPModel.findOne({ phoneNumber: mobile, otp });
+
+    if (!record) {
+      res.status(400).json({ error: "Invalid OTP" });
+      return;
+    }
+
+    if (record.expiresAt.getTime() < Date.now()) {
+      await OTPModel.deleteOne({ _id: record._id });
+      res.status(400).json({ error: "OTP expired" });
+      return;
+    }
+
+    // OTP is valid → delete OTP
+    await OTPModel.deleteOne({ _id: record._id });
+
+    // Fetch the user for role
+    const user = await User.findOne({ phone: mobile });
+    if (!user) {
+      res.status(404).json({ error: "User not found" });
+      return;
+    }
+
+    const payload = {
+      id: user._id,
+      phone: mobile,
+      role: user.role,
+    };
+
+    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: "7d" });
+
+    res.status(200).json({
+      message: "OTP verified successfully",
+      token:`phone_${token}`,
+      phone: mobile,
+      role: user.role,
+      type: "phone"
     });
+  } catch (err) {
+    console.error("[VERIFY OTP ERROR]", err);
+    res.status(500).json({ error: "Internal error" });
+  }
 }

@@ -12,24 +12,39 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.requireUser = exports.requireAdmin = exports.verifyFirebaseToken = void 0;
+exports.requireUser = exports.requireAdmin = exports.verifyToken = void 0;
 const firebase_1 = __importDefault(require("../config/firebase"));
 const userModel_1 = __importDefault(require("../models/userModel"));
-const verifyFirebaseToken = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
+const JWT_SECRET = process.env.JWT_SECRET || "supersecret";
+const verifyToken = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
         res.status(401).json({ message: "Unauthorized: Token missing" });
         return;
     }
-    const idToken = authHeader.split(" ")[1];
+    let token = authHeader.split(" ")[1];
     try {
-        const decodedToken = yield firebase_1.default.auth().verifyIdToken(idToken);
+        // 🔹 Phone login flow
+        if (token.startsWith("phone_")) {
+            token = token.replace("phone_", ""); // remove prefix
+            const decoded = jsonwebtoken_1.default.verify(token, JWT_SECRET);
+            const user = yield userModel_1.default.findOne({ phone: decoded.phone });
+            if (!user) {
+                res.status(401).json({ message: "Unauthorized: User not found" });
+                return;
+            }
+            req.user = user;
+            return next();
+        }
+        // 🔹 Google login flow (Firebase)
+        const decodedToken = yield firebase_1.default.auth().verifyIdToken(token);
         const user = yield userModel_1.default.findOne({ uid: decodedToken.uid });
         if (!user) {
             res.status(401).json({ message: "Unauthorized: User not found" });
             return;
         }
-        // Save FCM token if provided in request headers
+        // Optionally save FCM token
         const fcmToken = req.headers["x-fcm-token"];
         if (fcmToken && typeof fcmToken === "string" && user.fcmToken !== fcmToken) {
             user.fcmToken = fcmToken;
@@ -43,7 +58,7 @@ const verifyFirebaseToken = (req, res, next) => __awaiter(void 0, void 0, void 0
         res.status(401).json({ message: "Unauthorized: Invalid token" });
     }
 });
-exports.verifyFirebaseToken = verifyFirebaseToken;
+exports.verifyToken = verifyToken;
 // Admin-only access
 const requireAdmin = (req, res, next) => {
     var _a;
