@@ -1,92 +1,77 @@
 import { Request, Response, NextFunction } from "express";
-import admin from "../config/firebase";
-import User from "../models/userModel";
-import jwt from "jsonwebtoken";
-
-const JWT_SECRET = process.env.JWT_SECRET;
+import User, { IUser } from "../models/userModel";
+import jwt, { JwtPayload } from "jsonwebtoken";
+import { AuthRequest } from "../controllers/authController";
 
 declare module "express-serve-static-core" {
   interface Request {
-    user?: any;
+    user?: IUser;
   }
 }
 
-export const verifyToken = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+export const JWT_SECRET = process.env.JWT_SECRET || "secret";
+
+export const verifyToken = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
-    // let token: string | undefined;
+    const token = req.headers["authorization"]?.split(" ")[1];
 
-    // // First, check Authorization header
-    // const authHeader = req.headers.authorization;
-    // if (authHeader?.startsWith("Bearer ")) {
-    //   token = authHeader.split(" ")[1];
-    // }
-
-    // // If not in header, check cookie
-    // if (!token && req.cookies?.auth_token) {
-    //   token = req.cookies.auth_token;
-    // }
-
-    // if (!token) {
-    //   res.status(401).json({ message: "Unauthorized: Token missing" });
-    //   return;
-    // }
-
-    // // Phone flow
-    // if (token.startsWith("phone_")) {
-    //   const decoded = jwt.verify(token.replace("phone_", ""), JWT_SECRET!) as {
-    //     id: string;
-    //     phone: string;
-    //     role: string;
-    //   };
-
-    //   const user = await User.findOne({ phone: decoded.phone });
-    //   if (!user) {
-    //     res.status(401).json({ message: "Unauthorized: User not found" });
-    //     return;
-    //   }
-
-    //   req.user = user;
-    //   return next();
-    // }
-
-    // // 🔹 Google login flow (Firebase)
-    // const decodedToken = await admin.auth().verifyIdToken(token);
-    const user = await User.findOne({ uid: "TqwO6u9OREYX0Huo1JlR6XiAACp1" });
-
-    if (!user) {
-      res.status(401).json({ message: "Unauthorized: User not found" });
+    if (!token) {
+      res.status(401).json({
+        status: false,
+        message: "Unauthorized: Token not provided",
+        data: {},
+      });
       return;
     }
 
-    // Optionally save FCM token
-    const fcmToken = req.headers["x-fcm-token"];
-    if (fcmToken && typeof fcmToken === "string" && user.fcmToken !== fcmToken) {
-      user.fcmToken = fcmToken;
-      await user.save();
-    }
-      console.log(user)
+    const decoded = jwt.verify(token, JWT_SECRET) as JwtPayload;
 
-    req.user = user;
+    if (!decoded?.id) {
+      res.status(401).json({
+        status: false,
+        message: "Unauthorized: Invalid token payload",
+        data: {},
+      });
+      return;
+    }
+
+    const user = await User.findById(decoded.id);
+    if (!user) {
+      res.status(401).json({
+        status: false,
+        message: "Unauthorized: User not found",
+        data: {},
+      });
+      return;
+    }
+
+    // Attach the full user document
+    req.user= user;
+
     next();
-  } catch (err) {
-    console.error("Token verification error:", err);
-    res.status(401).json({ message: "Unauthorized: Invalid token" });
+  } catch (error) {
+    res.status(401).json({
+      status: false,
+      message: "Unauthorized: Invalid token",
+      data: {},
+    });
+    return;
   }
 };
 
 // Admin-only access
-export const requireAdmin = (req: Request, res: Response, next: NextFunction) => {
+export const requireAdmin = (req: AuthRequest, res: Response, next: NextFunction) => {
   if (req.user?.role !== "admin") {
-    res.status(403).json({ message: "Forbidden: Admins only" });
+    res.status(403).json({ status: "failed",  message: "Forbidden: Admins only"   });
     return;
   }
   next();
 };
 
 //User-only access
-export const requireUser = (req: Request, res: Response, next: NextFunction) => {
+export const requireUser = (req: AuthRequest, res: Response, next: NextFunction) => {
   if (req.user?.role !== "user") {
-    res.status(403).json({ message: "Forbidden: Users only" });
+    res.status(403).json({ status: "failed",message: "Forbidden: Users only"   });
     return;
   }
   next();

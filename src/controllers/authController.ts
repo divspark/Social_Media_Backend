@@ -1,57 +1,73 @@
 import { Request, Response } from "express";
 import admin from "../config/firebase";
-import User from "../models/userModel";
+import User, { IUser } from "../models/userModel";
 import { uploadProfileImage } from "../services/cloudinaryService";
+import jwt from "jsonwebtoken";
 
 export interface AuthRequest extends Request {
-  user?: { _id: string,role: "admin" | "user" };
+  user?: IUser;
   file?: Express.Multer.File;
 }
 
-// login with google
+export const JWT_SECRET = process.env.JWT_SECRET || "secret";
+
 // GOOGLE LOGIN
 export const googleLoginOrCreate = async (req: Request, res: Response): Promise<void> => {
   const { idToken } = req.body;
 
   if (!idToken) {
-    res.status(400).json({ message: "idToken is required" });
+    res.status(400).json({
+      status: false,
+      message: "idToken is required",
+      data: {}
+    });
     return;
   }
 
   try {
-    // Verify Google ID Token with Firebase Admin SDK
     const decoded = await admin.auth().verifyIdToken(idToken);
     const { uid, email, name } = decoded;
 
-    // Check if user already exists in MongoDB
     let user = await User.findOne({ uid });
 
     if (!user) {
-      // Create new user if not exists
       user = await User.create({
         name,
         email,
         uid,
-        role: "pending", // Default role
+        role: "pending",
       });
-
-      res.status(201).json({
-        message: "New Google user created, please complete profile",
-        user,
-        idToken,
-      });
-      return;
     }
 
-    res.status(200).json({
-      message: `${user.role} Google login successful`,
-      user,
-      idToken,
-      type:"google",
+    const payload = { id: user._id, uid: user.uid, email: user.email, role: user.role };
+    const token = jwt.sign(payload, JWT_SECRET, { noTimestamp: true });
+
+    res.cookie("auth_token", token, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "strict",
+      path: "/",
+    });
+
+    res.status(user.role === "pending" ? 201 : 200).json({
+      status: true,
+      message:
+        user.role === "pending"
+          ? "New Google user created, please complete profile"
+          : `${user.role} Google login successful`,
+      data: {
+        user,
+        token,
+        type: "google",
+      },
     });
   } catch (err) {
     console.error("Google login error:", err);
-    res.status(401).json({ message: "Invalid token", error: err });
+    res.status(401).json({
+      status: false,
+      message: "Invalid token",
+      data: { data: { error: err } },
+    });
   }
 };
 
@@ -60,7 +76,7 @@ export const phoneLoginOrCreate = async (req: Request, res: Response): Promise<v
   const { idToken } = req.body;
 
   if (!idToken) {
-    res.status(400).json({ message: "idToken is required" });
+    res.status(400).json({ status: "failed",  message: "idToken is required"   });
     return;
   }
 
@@ -75,14 +91,14 @@ export const phoneLoginOrCreate = async (req: Request, res: Response): Promise<v
         uid,
         role: "pending"
       });
-      res.status(201).json({ message: "New phone user created, please complete profile", user, idToken });
+      res.status(201).json({ message: "New phone user created, please complete profile",status: "Success",data:{user, idToken} });
       return;
     }
-
-    res.status(200).json({ message: `${user.role} phone login successful`, user, idToken });
+    const data = {idToken,user}
+    res.status(200).json({ message: `${user.role} phone login successful`, data,status: "Success" });
   } catch (err) {
     console.error("Phone login error:", err);
-    res.status(401).json({ message: "Invalid token", error: err });
+    res.status(401).json({ message: "Invalid token",status:"Failed", data: { data: { error: err } } });
   }
 };
 
@@ -93,7 +109,7 @@ export const completeProfile = async (req: AuthRequest, res: Response): Promise<
 
   try {
     if (!userId) {
-      res.status(400).json({ message: "Invalid user ID" });
+      res.status(400).json({ status: "failed",  message: "Invalid user ID"   });
       return;
     }
 
@@ -116,9 +132,9 @@ export const completeProfile = async (req: AuthRequest, res: Response): Promise<
       { new: true }
     );
 
-    res.status(200).json({ message: "Profile completed", user: updatedUser });
+    res.status(200).json({ status: "success",  message: "Profile completed",data:{ user: updatedUser } });
   } catch (err) {
-    res.status(500).json({ message: "Profile completion failed", error: err });
+    res.status(500).json({ status: "failed",  message: "Profile completion failed", data: { error: err }   });
   }
 };
 
@@ -128,13 +144,13 @@ export const getOwnProfile = async (req: AuthRequest, res: Response): Promise<vo
   try {
     const user = await User.findById(req.user?._id);
     if (!user) {
-      res.status(404).json({ message: "User not found" });
+      res.status(404).json({ status: "failed",  message: "User not found"   });
       return;
     }
 
-    res.status(200).json({ user });
+    res.status(200).json({ status: "success",message:"Profile Fetched Successfully", data:{ user  }});
   } catch (err) {
-    res.status(500).json({ message: "Failed to fetch profile", error: err });
+    res.status(500).json({ status: "failed",  message: "Failed to fetch profile", data: { error: err }   });
   }
 };
 
@@ -159,9 +175,9 @@ export const updateOwnProfile = async (req: AuthRequest, res: Response): Promise
 
     const updatedUser = await User.findByIdAndUpdate(userId, updateFields, { new: true });
 
-    res.status(200).json({ message: "Profile updated", user: updatedUser });
+    res.status(200).json({ status: "success",  message: "Profile updated", data:{user: updatedUser  }});
   } catch (err) {
-    res.status(500).json({ message: "Update failed", error: err });
+    res.status(500).json({ status: "failed",  message: "Update failed", data: { error: err }   });
   }
 };
 
@@ -171,13 +187,13 @@ export const getUserProfileByUID = async (req: AuthRequest, res: Response): Prom
     const user = await User.findOne({ uid: req.params.uid });
 
     if (!user) {
-      res.status(404).json({ message: "User not found" });
+      res.status(404).json({ status: "failed",  message: "User not found"   });
       return;
     }
 
-    res.status(200).json({ user });
+    res.status(200).json({ status: "success",message:"User fetched successfully", data:{ user } });
   } catch (err) {
-    res.status(500).json({ message: "Failed to fetch user", error: err });
+    res.status(500).json({ status: "failed",  message: "Failed to fetch user", data: { error: err }   });
   }
 };
 
@@ -188,12 +204,12 @@ export const saveFcmToken = async (req: AuthRequest, res: Response) => {
   const { fcmToken } = req.body;
 
   if (!fcmToken) {
-    res.status(400).json({ message: "FCM token is required" });
+    res.status(400).json({ status: "failed",  message: "FCM token is required"   });
     return;
   }
 
   await User.findByIdAndUpdate(userId, { fcmToken });
-  res.status(200).json({ message: "FCM token saved" });
+  res.status(200).json({ status: "success",  message: "FCM token saved"  });
 };
 
 
@@ -202,7 +218,7 @@ export const blockOrUnblockUser = async (req: AuthRequest, res: Response): Promi
   const { userId, block, reason, durationInDays } = req.body;
 
   if (!userId || typeof block !== "boolean") {
-    res.status(400).json({ message: "userId and block (true/false) are required" });
+    res.status(400).json({ status: "failed",  message: "userId and block (true/false) are required"   });
     return;
   }
 
@@ -218,7 +234,7 @@ export const blockOrUnblockUser = async (req: AuthRequest, res: Response): Promi
     const updatedUserDoc = await User.findByIdAndUpdate(userId, updateFields, { new: true });
 
     if (!updatedUserDoc) {
-      res.status(404).json({ message: "User not found" });
+      res.status(404).json({ status: "failed",  message: "User not found"   });
       return;
     }
 
@@ -229,10 +245,12 @@ export const blockOrUnblockUser = async (req: AuthRequest, res: Response): Promi
       message: block
         ? `User blocked ${durationInDays ? `for ${durationInDays} day(s)` : "permanently"}`
         : "User unblocked",
+        status: "success",
+      data:{
       user,
-    });
+    }});
   } catch (err) {
-    res.status(500).json({ message: "Failed to update user block status", error: err });
+    res.status(500).json({ status: "failed",  message: "Failed to update user block status", data: { error: err }   });
   }
 };
 
@@ -253,9 +271,9 @@ export const getBlockedUsers = async (_req: Request, res: Response): Promise<voi
       blockedUntil: user.blockedUntil ? user.blockedUntil : "Permanent",
     }));
 
-    res.status(200).json({ blockedUsers: formattedUsers });
+    res.status(200).json({ status: "success",message:"Blocked user fetched successfully", data:{ blockedUsers: formattedUsers } });
   } catch (err) {
-    res.status(500).json({ message: "Failed to fetch blocked users", error: err });
+    res.status(500).json({ status: "failed",  message: "Failed to fetch blocked users", data: { error: err }   });
   }
 };
 
@@ -264,7 +282,7 @@ export const setUserRestrictions = async (req: AuthRequest, res: Response): Prom
   const { userId, restrictions } = req.body;
 
   if (!userId || typeof restrictions !== "object") {
-    res.status(400).json({ message: "userId and restrictions are required" });
+    res.status(400).json({ status: "failed",  message: "userId and restrictions are required"   });
     return;
   }
 
@@ -275,9 +293,9 @@ export const setUserRestrictions = async (req: AuthRequest, res: Response): Prom
       { new: true }
     ).select("-restrictions"); // remove from response if you want
 
-    res.status(200).json({ message: "User restrictions updated", user: updatedUser });
+    res.status(200).json({ status: "success",  message: "User restrictions updated",data:{ user: updatedUser  }});
   } catch (err) {
-    res.status(500).json({ message: "Failed to update restrictions", error: err });
+    res.status(500).json({ status: "failed",  message: "Failed to update restrictions", data: { error: err }   });
   }
 };
 
@@ -294,9 +312,9 @@ export const getRestrictedUsers = async (_req: Request, res: Response): Promise<
       ],
     }).select("name email role restrictions");
 
-    res.status(200).json({ restrictedUsers: users });
+    res.status(200).json({ status: "success",message:"Restricted Users fetched successfully",  data:{restrictedUsers: users } });
   } catch (err) {
-    res.status(500).json({ message: "Failed to fetch restricted users", error: err });
+    res.status(500).json({ status: "failed",  message: "Failed to fetch restricted users", data: { error: err }   });
   }
 };
 
@@ -307,13 +325,13 @@ export const updateUserRole = async (req: AuthRequest, res: Response): Promise<v
   try {
     // Allow only admins to change role
     if (req.user?.role !== "admin") {
-      res.status(403).json({ message: "Forbidden: Only admins can change roles" });
+      res.status(403).json({ status: "failed",  message: "Forbidden: Only admins can change roles"   });
       return;
     }
 
     // Validate role
     if (!role || !["user", "admin"].includes(role)) {
-      res.status(400).json({ message: "Invalid role. Must be 'user' or 'admin'." });
+      res.status(400).json({ status: "failed",  message: "Invalid role. Must be 'user' or 'admin'."   });
       return;
     }
 
@@ -325,15 +343,17 @@ export const updateUserRole = async (req: AuthRequest, res: Response): Promise<v
     );
 
     if (!updatedUser) {
-      res.status(404).json({ message: "User not found" });
+      res.status(404).json({ status: "failed",  message: "User not found"   });
       return;
     }
 
     res.status(200).json({
       message: "User role updated successfully",
+      status: "success",
+      data:{
       user: updatedUser,
-    });
+    }});
   } catch (err) {
-    res.status(500).json({ message: "Failed to update user role", error: err });
+    res.status(500).json({ status: "failed",  message: "Failed to update user role", data: { error: err }   });
   }
 };

@@ -13,7 +13,7 @@ const JWT_SECRET = process.env.JWT_SECRET;
 export async function sendOtp(req: Request, res: Response): Promise<void> {
   const { mobile } = req.body;
   if (!mobile) {
-    res.status(400).json({ error: "Missing required fields" });
+    res.status(400).json({ status: "failed", error: "Missing required fields"   });
     return;
   }
 
@@ -50,7 +50,7 @@ export async function sendOtp(req: Request, res: Response): Promise<void> {
         .then(() =>
           res.status(200).json({
             message: "OTP sent successfully",
-            expiresIn: 60
+            data:{expiresIn: 60}
           })
         );
     })
@@ -62,7 +62,7 @@ export async function sendOtp(req: Request, res: Response): Promise<void> {
           (err && typeof err === "object" && "error" in err && err.error) ||
           (typeof err === "string" && err) ||
           "Internal error";
-        res.status(500).json({ error: msg });
+        res.status(500).json({ status: "failed", data: { error: msg }   });
       }
     });
 }
@@ -72,8 +72,13 @@ export async function sendOtp(req: Request, res: Response): Promise<void> {
  */
 export async function verifyOtpController(req: Request, res: Response): Promise<void> {
   const { mobile, otp } = req.body;
+
   if (!mobile || !otp) {
-    res.status(400).json({ error: "Missing required fields" });
+    res.status(400).json({
+      status: false,
+      message: "Missing required fields",
+      data: {}
+    });
     return;
   }
 
@@ -81,34 +86,48 @@ export async function verifyOtpController(req: Request, res: Response): Promise<
     const record = await OTPModel.findOne({ phoneNumber: mobile, otp });
 
     if (!record) {
-      res.status(400).json({ error: "Invalid OTP" });
+      res.status(400).json({
+        status: false,
+        message: "Invalid OTP",
+        data: {}
+      });
       return;
     }
 
     if (record.expiresAt.getTime() < Date.now()) {
       await OTPModel.deleteOne({ _id: record._id });
-      res.status(400).json({ error: "OTP expired" });
+      res.status(400).json({
+        status: false,
+        message: "OTP expired",
+        data: {}
+      });
       return;
     }
 
     // OTP is valid → delete OTP
     await OTPModel.deleteOne({ _id: record._id });
 
-    // Fetch the user for role
-    const user = await User.findOne({ phone: mobile });
+    // Fetch or create user
+    let user = await User.findOne({ phone: mobile });
+    let isNewUser = false;
+
     if (!user) {
-      res.status(404).json({ error: "User not found" });
-      return;
+      user = await User.create({
+        phone: mobile,
+        role: "pending"
+      });
+      isNewUser = true;
     }
 
+    // Prepare payload
     const payload = {
       id: user._id,
       phone: mobile,
       role: user.role,
     };
 
-    const rawToken = jwt.sign(payload, JWT_SECRET!, { noTimestamp: true });
-    const token = `phone_${rawToken}`;
+    // Sign JWT
+    const token = jwt.sign(payload, JWT_SECRET!, { noTimestamp: true });
 
     // Set JWT in secure httpOnly cookie
     res.cookie("auth_token", token, {
@@ -118,16 +137,25 @@ export async function verifyOtpController(req: Request, res: Response): Promise<
       path: "/",
     });
 
-    res.status(200).json({
-      message: "OTP verified successfully",
-      token,
-      phone: mobile,
-      role: user.role,
-      type: "phone"
+    res.status(isNewUser ? 201 : 200).json({
+      status: true,
+      message: isNewUser
+        ? "New phone user created, please complete profile"
+        : "OTP verified successfully",
+      data: {
+        token,
+        phone: mobile,
+        role: user.role,
+        type: "phone",
+      },
     });
   } catch (err) {
     console.error("[VERIFY OTP ERROR]", err);
-    res.status(500).json({ error: "Internal error" });
+    res.status(500).json({
+      status: false,
+      message: "Internal error",
+      data: { data: { error: err } }
+    });
   }
 }
 
@@ -140,9 +168,9 @@ export async function logoutController(req: Request, res: Response): Promise<voi
       path: "/",    
     });
 
-    res.status(200).json({ message: "Logged out successfully" });
+    res.status(200).json({ status: "success",  message: "Logged out successfully"  });
   } catch (err) {
     console.error("Logout error:", err);
-    res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({ status: "failed", message: "Internal server error"   });
   }
 }

@@ -5,13 +5,15 @@ import mongoose from "mongoose";
 import dayjs from "dayjs";
 import { sendNotification } from "../utils/sendNotification";
 import Notification from "../models/notificationModel";
-import User from "../models/userModel";
+import User, { IUser } from "../models/userModel";
 import relativeTime from "dayjs/plugin/relativeTime";
+import { stat } from "fs";
+import { messaging } from "firebase-admin";
 
 dayjs.extend(relativeTime);
 
 interface AuthRequest extends Request {
-  user?: { _id: string };
+  user?: IUser;
 }
 
 export const createPost = async (req: AuthRequest, res: Response): Promise<void> => {
@@ -20,7 +22,7 @@ export const createPost = async (req: AuthRequest, res: Response): Promise<void>
 
   try {
     if (!category || typeof category !== "string") {
-      res.status(400).json({ message: "Category is required" });
+      res.status(400).json({ status: "failed", message: "Category is required"   });
       return;
     }
 
@@ -34,7 +36,7 @@ export const createPost = async (req: AuthRequest, res: Response): Promise<void>
 
       for (const file of imageFiles) {
         if (file.size > 15 * 1024 * 1024) {
-          res.status(400).json({ message: "Each image must be under 15MB" });
+          res.status(400).json({ status: "failed", message: "Each image must be under 15MB"   });
           return;
         }
 
@@ -67,7 +69,7 @@ export const createPost = async (req: AuthRequest, res: Response): Promise<void>
       const videoFile = (req.files["video"] as Express.Multer.File[])[0];
 
       if (videoFile.size > 1024 * 1024 * 1024) {
-        res.status(400).json({ message: "Video too large (max 1GB)" });
+        res.status(400).json({ status: "failed", message: "Video too large (max 1GB)"   });
         return;
       }
 
@@ -97,7 +99,7 @@ export const createPost = async (req: AuthRequest, res: Response): Promise<void>
       const thumbnailFile = (req.files["videoThumbnail"] as Express.Multer.File[])[0];
 
       if (thumbnailFile.size > 5 * 1024 * 1024) {
-        res.status(400).json({ message: "Thumbnail too large (max 5MB)" });
+        res.status(400).json({ status: "failed", message: "Thumbnail too large (max 5MB)"   });
         return;
       }
 
@@ -143,6 +145,9 @@ export const createPost = async (req: AuthRequest, res: Response): Promise<void>
     };
 
     res.status(201).json({
+      message: "Post created successfully",
+      status: "success",
+      data:{
       category: category.toLowerCase(),
       post: {
         ...postObj,
@@ -153,10 +158,10 @@ export const createPost = async (req: AuthRequest, res: Response): Promise<void>
           photoURL: admin.photoURL,
         },
       },
-    });
+    }});
   } catch (err) {
     console.error("Create Post Error:", err);
-    res.status(500).json({ message: "Failed to create post", error: err });
+    res.status(500).json({ status: "failed", message: "Failed to create post", data: { error: err }   });
   }
 };
 
@@ -184,7 +189,7 @@ export const votePollOption = async (req: AuthRequest, res: Response) => {
     !mongoose.Types.ObjectId.isValid(optionId) ||
     !userId
   ) {
-    res.status(400).json({ message: "Invalid postId, optionId, or user not authenticated" });
+    res.status(400).json({ status: "failed",  message: "Invalid postId, optionId, or user not authenticated"   });
     return;
   }
 
@@ -192,7 +197,7 @@ export const votePollOption = async (req: AuthRequest, res: Response) => {
     const post = await Post.findById(postId);
 
     if (!post || post.postType !== "poll") {
-      res.status(404).json({ message: "Poll post not found" });
+      res.status(404).json({ status: "failed", message: "Poll post not found"   });
       return;
     }
 
@@ -211,7 +216,7 @@ export const votePollOption = async (req: AuthRequest, res: Response) => {
     );
 
     if (!selectedOption) {
-      res.status(404).json({ message: "Poll option not found" });
+      res.status(404).json({ status: "failed",  message: "Poll option not found"   });
       return;
     }
 
@@ -224,12 +229,14 @@ export const votePollOption = async (req: AuthRequest, res: Response) => {
 
     res.status(200).json({
       message: "Vote cast successfully",
+      status: "success",
+      data:{
       postId,
       votedOptionId: optionId,
       results: result,
-    });
+   }});
   } catch (err) {
-    res.status(500).json({ message: "Voting failed", error: err });
+    res.status(500).json({ status: "failed",  message: "Voting failed", data: { error: err }   });
   }
 };
 
@@ -238,7 +245,7 @@ export const getPostVotePollById = async (req: AuthRequest, res: Response) => {
   const userId = req.user?._id;
 
   if (!mongoose.Types.ObjectId.isValid(id)) {
-    res.status(400).json({ message: "Invalid post ID" });
+    res.status(400).json({ status: "failed", message: "Invalid post ID"   });
     return;
   }
 
@@ -246,7 +253,7 @@ export const getPostVotePollById = async (req: AuthRequest, res: Response) => {
     const post = await Post.findById(id).populate("adminId", "name photoURL");
 
     if (!post) {
-      res.status(404).json({ message: "Post not found" });
+      res.status(404).json({ status: "failed", message: "Post not found"   });
       return;
     }
 
@@ -271,13 +278,16 @@ export const getPostVotePollById = async (req: AuthRequest, res: Response) => {
     }
 
     res.status(200).json({
+      message: "Post fetched successfully",
+      status: "success",
+      data:{
       ...postObj,
       timeAgo,
       pollResults: pollResults || null, // null if not voted
       userVotedOptionId: userVotedOptionId || null,
-    });
+   }});
   } catch (err) {
-    res.status(500).json({ message: "Failed to fetch post", error: err });
+    res.status(500).json({ status: "failed", message: "Failed to fetch post", data: { error: err }   });
   }
 };
 
@@ -308,9 +318,9 @@ export const getAllPosts = async (_req: AuthRequest, res: Response): Promise<voi
       };
     });
 
-    res.status(200).json({ posts: formattedPosts });
+    res.status(200).json({ status: "success",  data:{posts: formattedPosts } });
   } catch (err) {
-    res.status(500).json({ message: "Failed to fetch posts", error: err });
+    res.status(500).json({ status: "failed",  message: "Failed to fetch posts", data: { error: err }   });
   }
 };
 
@@ -320,7 +330,7 @@ export const getPostById = async (req: AuthRequest, res: Response): Promise<void
     const post = await Post.findById(req.params.id).populate("adminId", "_id name photoURL");
 
     if (!post) {
-      res.status(404).json({ message: "Post not found" });
+      res.status(404).json({ status: "failed", message: "Post not found"   });
       return;
     }
 
@@ -335,6 +345,9 @@ export const getPostById = async (req: AuthRequest, res: Response): Promise<void
     const { category, ...cleanedPost } = postObj;
 
     res.status(200).json({
+      message:"Post fetched successfully",
+      status:"success",
+      data:{
       category: category?.toLowerCase() || null,
       post: {
         ...cleanedPost,
@@ -346,9 +359,9 @@ export const getPostById = async (req: AuthRequest, res: Response): Promise<void
         },
         videoThumbnail: postObj.videoThumbnail || null,
       },
-    });
+   }});
   } catch (err) {
-    res.status(500).json({ message: "Failed to fetch post", error: err });
+    res.status(500).json({ status: "failed",message: "Failed to fetch post", data: { error: err }   });
   }
 };
 
@@ -396,14 +409,17 @@ export const getPostsByCategory = async (req: Request, res: Response): Promise<v
     });
 
     res.status(200).json({
+      message: "Posts fetched successfully",
+      status: "success",
+      data:{
       category: category.toLowerCase(),
       currentPage: page,
       totalPages: Math.ceil(totalPosts / limit),
       totalPosts,
       posts: formattedPosts,
-    });
+   }});
   } catch (err) {
-    res.status(500).json({ message: "Failed to fetch posts by category", error: err });
+    res.status(500).json({ status: "failed", message: "Failed to fetch posts by category", data: { error: err }   });
   }
 };
 
@@ -417,7 +433,7 @@ export const updatePost = async (req: AuthRequest, res: Response): Promise<void>
   try {
     const post = await Post.findOne({ _id: id, adminId });
     if (!post) {
-      res.status(404).json({ message: "Post not found or unauthorized" });
+      res.status(404).json({ status: "failed", message: "Post not found or unauthorized"   });
       return;
     }
 
@@ -513,6 +529,9 @@ export const updatePost = async (req: AuthRequest, res: Response): Promise<void>
     const { category: _omitCategory, ...cleanedPost } = postObj;
 
     res.status(200).json({
+      message: "Post updated successfully",
+      status: "success",
+      data:{
       category: post.category.toLowerCase(),
       post: {
         ...cleanedPost,
@@ -524,10 +543,10 @@ export const updatePost = async (req: AuthRequest, res: Response): Promise<void>
         },
         videoThumbnail: post.videoThumbnail || null,
       },
-    });
+    }});
   } catch (err) {
     console.error("Update Post Error:", err);
-    res.status(500).json({ message: "Failed to update post", error: err });
+    res.status(500).json({ status: "failed", message: "Failed to update post", data: { error: err }   });
   }
 };
 
@@ -539,14 +558,14 @@ export const deletePost = async (req: AuthRequest, res: Response): Promise<void>
   try {
     const post = await Post.findOne({ _id: id, adminId });
     if (!post) {
-      res.status(404).json({ message: "Post not found" });
+      res.status(404).json({ status: "failed", message: "Post not found"   });
       return;
     }
 
     await Post.findByIdAndDelete(id);
-    res.status(200).json({ message: "Post deleted successfully" });
+    res.status(200).json({ status: "success",  message: "Post deleted successfully"  });
   } catch (err) {
-    res.status(500).json({ message: "Delete failed", error: err });
+    res.status(500).json({ status: "failed",  message: "Delete failed", data: { error: err }   });
   }
 };
 
@@ -560,7 +579,7 @@ export const toggleLikePost = async (req: AuthRequest, res: Response): Promise<v
   try {
     const post = await Post.findById(postId);
     if (!post) {
-      res.status(404).json({ message: "Post not found" });
+      res.status(404).json({ status: "failed", message: "Post not found"   });
       return;
     }
 
@@ -593,10 +612,12 @@ export const toggleLikePost = async (req: AuthRequest, res: Response): Promise<v
 
     res.status(200).json({
       message: isLiked ? "Post unliked" : "Post liked",
+      status: "success",
+      data: {
       likesCount: post.likes.length,
-    });
+    }});
   } catch (err) {
-    res.status(500).json({ message: "Failed to toggle like", error: err });
+    res.status(500).json({ status: "failed",  message: "Failed to toggle like", data: { error: err }   });
   }
 };
 
@@ -607,7 +628,7 @@ export const toggleSavePost = async (req: AuthRequest, res: Response): Promise<v
   const userId = req.user?._id;
 
   if (!userId) {
-    res.status(400).json({ message: "User ID is required" });
+    res.status(400).json({ status: "failed", message: "User ID is required"   });
     return;
   }
 
@@ -616,7 +637,7 @@ export const toggleSavePost = async (req: AuthRequest, res: Response): Promise<v
   try {
     const post = await Post.findById(postId);
     if (!post) {
-      res.status(404).json({ message: "Post not found" });
+      res.status(404).json({ status: "failed", message: "Post not found"   });
       return;
     }
 
@@ -648,10 +669,11 @@ export const toggleSavePost = async (req: AuthRequest, res: Response): Promise<v
     await post.save();
     res.status(200).json({
       message: isSaved ? "Post unsaved" : "Post saved",
-      savedCount: post.savedBy.length,
+      status: "success",
+      data: post.savedBy.length,
     });
   } catch (err) {
-    res.status(500).json({ message: "Failed to toggle save", error: err });
+    res.status(500).json({ status: "failed", message: "Failed to toggle save", data: { error: err }   });
   }
 };
 
@@ -664,9 +686,9 @@ export const getSavedPosts = async (req: AuthRequest, res: Response): Promise<vo
       .sort({ createdAt: -1 })
       .populate("adminId", "name photoURL");
 
-    res.status(200).json({ savedPosts: posts });
+    res.status(200).json({ status: "success",message:"Fetched Post Successfully",  data: posts  });
   } catch (err) {
-    res.status(500).json({ message: "Failed to fetch saved posts", error: err });
+    res.status(500).json({ status: "failed", message: "Failed to fetch saved posts", data: { error: err }   });
   }
 };
 
@@ -678,14 +700,14 @@ export const sharePost = async (req: AuthRequest, res: Response): Promise<void> 
   const userId = req.user?._id;
 
   if (!userId) {
-    res.status(400).json({ message: "User ID is required" });
+    res.status(400).json({ status: "failed",message: "User ID is required"   });
     return;
   }
 
   try {
     const post = await Post.findById(postId);
     if (!post) {
-      res.status(404).json({ message: "Post not found" });
+      res.status(404).json({ status: "failed", message: "Post not found"   });
       return;
     }
 
@@ -703,12 +725,14 @@ export const sharePost = async (req: AuthRequest, res: Response): Promise<void> 
 
     res.status(200).json({
       message: "Post share tracked successfully",
+      status: "success",
+      data:{
       shareUrl,
       shareCount: post.shareCount,
-    });
+    }});
   } catch (err) {
     console.error("Share Post Error:", err);
-    res.status(500).json({ message: "Failed to share post", error: err });
+    res.status(500).json({ status: "failed", message: "Failed to share post", data: { error: err }   });
   }
 };
 
@@ -718,7 +742,7 @@ export const trackPostView = async (req: AuthRequest, res: Response): Promise<vo
   const userId = req.user?._id;
 
   if (!userId) {
-    res.status(401).json({ message: "User not authenticated" });
+    res.status(401).json({ status: "failed", message: "User not authenticated"   });
     return;
   }
 
@@ -727,7 +751,7 @@ export const trackPostView = async (req: AuthRequest, res: Response): Promise<vo
   try {
     const post = await Post.findById(postId);
     if (!post) {
-      res.status(404).json({ message: "Post not found" });
+      res.status(404).json({ status: "failed",message: "Post not found"   });
       return;
     }
 
@@ -744,9 +768,9 @@ export const trackPostView = async (req: AuthRequest, res: Response): Promise<vo
     //Populate userId for analytics
     await post.populate("views.userId", "name email photoURL");
 
-    res.status(200).json({ message: "Post view tracked" });
+    res.status(200).json({ status: "success",  message: "Post view tracked"  });
   } catch (err) {
-    res.status(500).json({ message: "Failed to track post view", error: err });
+    res.status(500).json({ status: "failed",  message: "Failed to track post view", data: { error: err }   });
   }
 };
 
@@ -759,7 +783,7 @@ export const getPostAnalytics = async (req: AuthRequest, res: Response): Promise
   const adminId = req.user?._id;
 
   if (!adminId) {
-    res.status(400).json({ message: "Admin ID is required" });
+    res.status(400).json({ status: "failed", message: "Admin ID is required"   });
     return;
   }
 
@@ -771,12 +795,12 @@ export const getPostAnalytics = async (req: AuthRequest, res: Response): Promise
       .populate("sharedBy", "name email photoURL");
 
     if (!post) {
-      res.status(404).json({ message: "Post not found" });
+      res.status(404).json({ status: "failed", message: "Post not found"   });
       return;
     }
 
     if (post.adminId.toString() !== adminId.toString()) {
-      res.status(403).json({ message: "Access denied. Only the post owner can view analytics." });
+      res.status(403).json({ status: "failed",  message: "Access denied. Only the post owner can view analytics."   });
       return;
     }
 
@@ -850,6 +874,9 @@ export const getPostAnalytics = async (req: AuthRequest, res: Response): Promise
     });
 
     res.status(200).json({
+      message: "Post analytics fetched successfully",
+      status: "success",
+      data:{
       postId: post._id,
       likes: post.likes.length,
       saved: post.savedBy.length,
@@ -859,9 +886,10 @@ export const getPostAnalytics = async (req: AuthRequest, res: Response): Promise
       likedBy,
       savedBy,
       sharedBy,
+      }
     });
   } catch (err) {
-    res.status(500).json({ message: "Failed to fetch analytics", error: err });
+    res.status(500).json({ status: "failed", message: "Failed to fetch analytics", data: { error: err }   });
   }
 };
 

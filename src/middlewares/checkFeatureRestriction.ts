@@ -9,13 +9,13 @@ export const checkFeatureAccess =
     try {
       const userId = req.user?._id;
       if (!userId) {
-        res.status(401).json({ message: "Unauthorized" });
+        res.status(401).json({ status: "failed", message: "Unauthorized"   });
         return;
       }
 
       const user = await User.findById(userId);
       if (!user) {
-        res.status(404).json({ message: "User not found" });
+        res.status(404).json({ status: "failed", message: "User not found"   });
         return;
       }
 
@@ -23,12 +23,13 @@ export const checkFeatureAccess =
       if (isRestricted) {
         res.status(403).json({
           message: `You are restricted from using the '${feature}' feature.`,
+          status:"failed"
         });
         return;
       }
 
       next();
     } catch (err) {
-      res.status(500).json({ message: "Feature access check failed", error: err });
+      res.status(500).json({ status: "failed", message: "Feature access check failed", data: { error: err }   });
     }
   };

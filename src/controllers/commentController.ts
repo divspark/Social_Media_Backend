@@ -3,19 +3,18 @@ import mongoose from "mongoose";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import Comment from "../models/commentModel";
-import User from "../models/userModel";
+import User, { IUser } from "../models/userModel";
 import Post from "../models/postModel";
 import Notification from "../models/notificationModel";
 import { sendNotification } from "../utils/sendNotification";
+import { messaging } from "firebase-admin";
+import { stat } from "fs";
 
 dayjs.extend(relativeTime);
 
 //Extend Request with Auth Info
 interface AuthRequest extends Request {
-  user?: {
-    _id: string;
-    role: "admin" | "user";
-  };
+  user?: IUser;
 }
 
 //Add a Comment (Only once per post per user)
@@ -24,14 +23,14 @@ export const addComment = async (req: AuthRequest, res: Response): Promise<void>
   const userId = req.user?._id;
 
   if (!userId) {
-    res.status(401).json({ message: "Unauthorized" });
+    res.status(401).json({ status: "failed",  message: "Unauthorized"   });
     return;
   }
 
   try {
     const existingComment = await Comment.findOne({ postId, userId });
     if (existingComment) {
-      res.status(400).json({ message: "You have already commented on this post." });
+      res.status(400).json({ status: "failed",  message: "You have already commented on this post."   });
       return;
     }
 
@@ -56,14 +55,16 @@ export const addComment = async (req: AuthRequest, res: Response): Promise<void>
 
     res.status(201).json({
       message: "Comment added successfully",
+      status: "success",
+      data:{
       comment: {
         ...populated.toObject(),
         timeAgo: dayjs(comment.createdAt).fromNow(),
       },
-    });
+   }});
   } catch (error) {
     console.error("Add Comment Error:", error);
-    res.status(500).json({ message: "Failed to add comment", error });
+    res.status(500).json({ status: "failed",  message: "Failed to add comment", error   });
   }
 };
 
@@ -74,19 +75,19 @@ export const replyToComment = async (req: AuthRequest, res: Response): Promise<v
   const adminId = req.user?._id;
 
   if (!adminId || req.user?.role !== "admin") {
-    res.status(403).json({ message: "Only admin can reply to comments" });
+    res.status(403).json({ status: "failed",  message: "Only admin can reply to comments"   });
     return;
   }
 
   try {
     const comment = await Comment.findById(commentId);
     if (!comment) {
-      res.status(404).json({ message: "Comment not found" });
+      res.status(404).json({ status: "failed",  message: "Comment not found"   });
       return;
     }
 
     if (comment.reply?.content) {
-      res.status(400).json({ message: "This comment already has a reply." });
+      res.status(400).json({ status: "failed",  message: "This comment already has a reply."   });
       return;
     }
 
@@ -114,11 +115,13 @@ export const replyToComment = async (req: AuthRequest, res: Response): Promise<v
 
     res.status(200).json({
       message: "Reply added successfully",
+      status: "success",
+      data:{
       comment: updated,
-    });
+    }});
   } catch (error) {
     console.error("Reply Error:", error);
-    res.status(500).json({ message: "Failed to reply to comment", error });
+    res.status(500).json({ status: "failed",  message: "Failed to reply to comment", error   });
   }
 };
 
@@ -128,14 +131,14 @@ export const deleteComment = async (req: AuthRequest, res: Response): Promise<vo
   const currentUser = req.user;
 
   if (!currentUser) {
-    res.status(401).json({ message: "Unauthorized" });
+    res.status(401).json({ status: "failed",  message: "Unauthorized"   });
     return;
   }
 
   try {
     const comment = await Comment.findById(commentId);
     if (!comment) {
-      res.status(404).json({ message: "Comment not found" });
+      res.status(404).json({ status: "failed",  message: "Comment not found"   });
       return;
     }
 
@@ -144,13 +147,13 @@ export const deleteComment = async (req: AuthRequest, res: Response): Promise<vo
 
     if (isAdmin || isOwner) {
       await Comment.findByIdAndDelete(commentId);
-      res.status(200).json({ message: "Comment deleted successfully" });
+      res.status(200).json({ status: "success",  message: "Comment deleted successfully"  });
     } else {
-      res.status(403).json({ message: "Unauthorized to delete this comment" });
+      res.status(403).json({ status: "failed", message: "Unauthorized to delete this comment"   });
     }
   } catch (error) {
     console.error("Delete Comment Error:", error);
-    res.status(500).json({ message: "Failed to delete comment", error });
+    res.status(500).json({ status: "failed", message: "Failed to delete comment", error   });
   }
 };
 
@@ -186,14 +189,17 @@ export const getCommentsByPost = async (req: Request, res: Response): Promise<vo
     });
 
     res.status(200).json({
+      message: "Comments fetched successfully",
+      status: "success",
+      data:{
       total,
       currentPage: page,
       totalPages: Math.ceil(total / limit),
       comments: formatted,
-    });
+   }});
   } catch (error) {
     console.error("Get Comments Error:", error);
-    res.status(500).json({ message: "Failed to fetch comments", error });
+    res.status(500).json({ status: "failed", message: "Failed to fetch comments", error   });
   }
 };
 
@@ -203,14 +209,14 @@ export const toggleLikeComment = async (req: Request, res: Response): Promise<vo
   const userId = req.user?._id;
 
   if (!userId) {
-    res.status(400).json({ message: "User ID is required" });
+    res.status(400).json({ status: "failed",message: "User ID is required"   });
     return;
   }
 
   try {
     const comment = await Comment.findById(commentId);
     if (!comment) {
-      res.status(404).json({ message: "Comment not found" });
+      res.status(404).json({ status: "failed",  message: "Comment not found"   });
       return;
     }
 
@@ -249,10 +255,12 @@ export const toggleLikeComment = async (req: Request, res: Response): Promise<vo
 
     res.status(200).json({
       message: alreadyLiked ? "Comment unliked" : "Comment liked",
+      status: "success",
+      data:{
       likesCount: comment.likes.length,
-    });
+   }});
   } catch (error) {
     console.error("Toggle Like Error:", error);
-    res.status(500).json({ message: "Failed to like/unlike comment", error });
+    res.status(500).json({ status: "failed", message: "Failed to like/unlike comment", error   });
   }
 };

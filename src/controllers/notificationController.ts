@@ -48,11 +48,11 @@ export const getNotifications = (req: AuthRequest, res: Response): Promise<void>
         });
       });
 
-      res.status(200).json({ notifications: grouped });
+      res.status(200).json({ status: "success",  data:{notifications: grouped}  });
     })
     .catch(error => {
       console.error("Failed to fetch notifications:", error);
-      res.status(500).json({ message: "Failed to fetch notifications", error });
+      res.status(500).json({ status: "failed",  message: "Failed to fetch notifications", error   });
     });
 };
 
@@ -64,18 +64,18 @@ export const markAsRead = (req: AuthRequest, res: Response): Promise<void> => {
   return Notification.findOne({ _id: id, receiverId: userId })
     .then(notification => {
       if (!notification) {
-        res.status(404).json({ message: "Notification not found" });
+        res.status(404).json({ status: "failed",  message: "Notification not found"   });
         return;
       }
 
       notification.isRead = true;
       return notification.save().then(() => {
-        res.status(200).json({ message: "Notification marked as read" });
+        res.status(200).json({ status: "success",  message: "Notification marked as read"  });
       });
     })
     .catch(error => {
       console.error("Failed to mark as read:", error);
-      res.status(500).json({ message: "Failed to mark as read", error });
+      res.status(500).json({ status: "failed",  message: "Failed to mark as read", error   });
     });
 };
 
@@ -84,23 +84,23 @@ export const markAllAsRead = (req: AuthRequest, res: Response): Promise<void> =>
   const userId = req.user?._id;
 
   if (!userId) {
-    res.status(401).json({ message: "Unauthorized" });
+    res.status(401).json({ status: "failed", message: "Unauthorized"   });
     return Promise.resolve();
   }
 
   return Notification.updateMany({ receiverId: userId, isRead: false }, { $set: { isRead: true } })
     .then(result => {
       res.status(200).json({
-        success: true,
+        status: "success",
         message: `${result.modifiedCount} notifications marked as read`,
       });
     })
     .catch(error => {
       console.error("Error marking all notifications as read:", error);
       res.status(500).json({
-        success: false,
+        status:"failed",
         message: "Failed to mark all notifications as read",
-        error,
+        data:{error:error},
       });
     });
 };
