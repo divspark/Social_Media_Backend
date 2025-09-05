@@ -26,7 +26,7 @@ export const createPost = async (req: AuthRequest, res: Response): Promise<void>
 
   try {
     if (!category || typeof category !== "string") {
-      res.status(400).json({ status: "failed", message: "Category is required"   });
+      res.status(400).json({ status: false, message: "Category is required"   });
       return;
     }
 
@@ -40,7 +40,7 @@ export const createPost = async (req: AuthRequest, res: Response): Promise<void>
 
       for (const file of imageFiles) {
         if (file.size > 15 * 1024 * 1024) {
-          res.status(400).json({ status: "failed", message: "Each image must be under 15MB"   });
+          res.status(400).json({ status: false, message: "Each image must be under 15MB"   });
           return;
         }
 
@@ -73,7 +73,7 @@ export const createPost = async (req: AuthRequest, res: Response): Promise<void>
       const videoFile = (req.files["video"] as Express.Multer.File[])[0];
 
       if (videoFile.size > 1024 * 1024 * 1024) {
-        res.status(400).json({ status: "failed", message: "Video too large (max 1GB)"   });
+        res.status(400).json({ status: false, message: "Video too large (max 1GB)"   });
         return;
       }
 
@@ -103,7 +103,7 @@ export const createPost = async (req: AuthRequest, res: Response): Promise<void>
       const thumbnailFile = (req.files["videoThumbnail"] as Express.Multer.File[])[0];
 
       if (thumbnailFile.size > 5 * 1024 * 1024) {
-        res.status(400).json({ status: "failed", message: "Thumbnail too large (max 5MB)"   });
+        res.status(400).json({ status: false, message: "Thumbnail too large (max 5MB)"   });
         return;
       }
 
@@ -150,10 +150,10 @@ export const createPost = async (req: AuthRequest, res: Response): Promise<void>
 
     res.status(201).json({
       message: "Post created successfully",
-      status: "success",
+      status: true,
       data:{
       category: category.toLowerCase(),
-      post: {
+      data: {
         ...postObj,
         timeAgo: dayjs(post.createdAt).fromNow(),
         adminId: {
@@ -165,7 +165,7 @@ export const createPost = async (req: AuthRequest, res: Response): Promise<void>
     }});
   } catch (err) {
     console.error("Create Post Error:", err);
-    res.status(500).json({ status: "failed", message: "Failed to create post", data: { error: err }   });
+    res.status(500).json({ status: false, message: "Failed to create post", data: { error: err }   });
   }
 };
 
@@ -193,7 +193,7 @@ export const votePollOption = async (req: AuthRequest, res: Response) => {
     !mongoose.Types.ObjectId.isValid(optionId) ||
     !userId
   ) {
-    res.status(400).json({ status: "failed",  message: "Invalid postId, optionId, or user not authenticated"   });
+    res.status(400).json({ status: false,  message: "Invalid postId, optionId, or user not authenticated"   });
     return;
   }
 
@@ -201,7 +201,7 @@ export const votePollOption = async (req: AuthRequest, res: Response) => {
     const post = await Post.findById(postId);
 
     if (!post || post.postType !== "poll") {
-      res.status(404).json({ status: "failed", message: "Poll post not found"   });
+      res.status(404).json({ status: false, message: "Poll post not found"   });
       return;
     }
 
@@ -220,7 +220,7 @@ export const votePollOption = async (req: AuthRequest, res: Response) => {
     );
 
     if (!selectedOption) {
-      res.status(404).json({ status: "failed",  message: "Poll option not found"   });
+      res.status(404).json({ status: false,  message: "Poll option not found"   });
       return;
     }
 
@@ -233,14 +233,14 @@ export const votePollOption = async (req: AuthRequest, res: Response) => {
 
     res.status(200).json({
       message: "Vote cast successfully",
-      status: "success",
+      status: true,
       data:{
       postId,
       votedOptionId: optionId,
       results: result,
    }});
   } catch (err) {
-    res.status(500).json({ status: "failed",  message: "Voting failed", data: { error: err }   });
+    res.status(500).json({ status: false,  message: "Voting failed", data: { error: err }   });
   }
 };
 
@@ -249,7 +249,7 @@ export const getPostVotePollById = async (req: AuthRequest, res: Response) => {
   const userId = req.user?._id;
 
   if (!mongoose.Types.ObjectId.isValid(id)) {
-    res.status(400).json({ status: "failed", message: "Invalid post ID"   });
+    res.status(400).json({ status: false, message: "Invalid post ID"   });
     return;
   }
 
@@ -257,7 +257,7 @@ export const getPostVotePollById = async (req: AuthRequest, res: Response) => {
     const post = await Post.findById(id).populate("adminId", "name photoURL");
 
     if (!post) {
-      res.status(404).json({ status: "failed", message: "Post not found"   });
+      res.status(404).json({ status: false, message: "Post not found"   });
       return;
     }
 
@@ -283,7 +283,7 @@ export const getPostVotePollById = async (req: AuthRequest, res: Response) => {
 
     res.status(200).json({
       message: "Post fetched successfully",
-      status: "success",
+      status: true,
       data:{
       ...postObj,
       timeAgo,
@@ -291,7 +291,7 @@ export const getPostVotePollById = async (req: AuthRequest, res: Response) => {
       userVotedOptionId: userVotedOptionId || null,
    }});
   } catch (err) {
-    res.status(500).json({ status: "failed", message: "Failed to fetch post", data: { error: err }   });
+    res.status(500).json({ status: false, message: "Failed to fetch post", data: { error: err }   });
   }
 };
 
@@ -338,7 +338,7 @@ export const getAllPosts = async (req: AuthRequest, res: Response): Promise<void
     const hasMore = skip + posts.length < totalPosts;
 
     res.status(200).json({ 
-      status: "success",  
+      status: true,  
       message: "Posts fetched successfully",
       data: {
         posts: formattedPosts,
@@ -349,7 +349,7 @@ export const getAllPosts = async (req: AuthRequest, res: Response): Promise<void
     });
   } catch (err) {
     res.status(500).json({ 
-      status: "failed",  
+      status: false,  
       message: "Failed to fetch posts", 
       data: { error: err } 
     });
@@ -362,7 +362,7 @@ export const getPostById = async (req: AuthRequest, res: Response): Promise<void
     const post = await Post.findById(req.params.id).populate("adminId", "_id name photoURL");
 
     if (!post) {
-      res.status(404).json({ status: "failed", message: "Post not found"   });
+      res.status(404).json({ status: false, message: "Post not found"   });
       return;
     }
 
@@ -378,10 +378,10 @@ export const getPostById = async (req: AuthRequest, res: Response): Promise<void
 
     res.status(200).json({
       message:"Post fetched successfully",
-      status:"success",
+      status: true,
       data:{
       category: category?.toLowerCase() || null,
-      post: {
+      data: {
         ...cleanedPost,
         timeAgo: dayjs(post.createdAt).fromNow(),
         adminId: {
@@ -393,7 +393,7 @@ export const getPostById = async (req: AuthRequest, res: Response): Promise<void
       },
    }});
   } catch (err) {
-    res.status(500).json({ status: "failed",message: "Failed to fetch post", data: { error: err }   });
+    res.status(500).json({ status: false,message: "Failed to fetch post", data: { error: err }   });
   }
 };
 
@@ -442,16 +442,16 @@ export const getPostsByCategory = async (req: Request, res: Response): Promise<v
 
     res.status(200).json({
       message: "Posts fetched successfully",
-      status: "success",
+      status: true,
       data:{
       category: category.toLowerCase(),
       currentPage: page,
       totalPages: Math.ceil(totalPosts / limit),
       totalPosts,
-      posts: formattedPosts,
+      data: formattedPosts,
    }});
   } catch (err) {
-    res.status(500).json({ status: "failed", message: "Failed to fetch posts by category", data: { error: err }   });
+    res.status(500).json({ status: false, message: "Failed to fetch posts by category", data: { error: err }   });
   }
 };
 
@@ -465,7 +465,7 @@ export const updatePost = async (req: AuthRequest, res: Response): Promise<void>
   try {
     const post = await Post.findOne({ _id: id, adminId });
     if (!post) {
-      res.status(404).json({ status: "failed", message: "Post not found or unauthorized"   });
+      res.status(404).json({ status: false, message: "Post not found or unauthorized"   });
       return;
     }
 
@@ -562,10 +562,10 @@ export const updatePost = async (req: AuthRequest, res: Response): Promise<void>
 
     res.status(200).json({
       message: "Post updated successfully",
-      status: "success",
+      status: true,
       data:{
       category: post.category.toLowerCase(),
-      post: {
+      data: {
         ...cleanedPost,
         timeAgo: dayjs(post.createdAt).fromNow(),
         adminId: {
@@ -578,7 +578,7 @@ export const updatePost = async (req: AuthRequest, res: Response): Promise<void>
     }});
   } catch (err) {
     console.error("Update Post Error:", err);
-    res.status(500).json({ status: "failed", message: "Failed to update post", data: { error: err }   });
+    res.status(500).json({ status: false, message: "Failed to update post", data: { error: err }   });
   }
 };
 
@@ -590,14 +590,14 @@ export const deletePost = async (req: AuthRequest, res: Response): Promise<void>
   try {
     const post = await Post.findOne({ _id: id, adminId });
     if (!post) {
-      res.status(404).json({ status: "failed", message: "Post not found"   });
+      res.status(404).json({ status: false, message: "Post not found"   });
       return;
     }
 
     await Post.findByIdAndDelete(id);
-    res.status(200).json({ status: "success",  message: "Post deleted successfully"  });
+    res.status(200).json({ status: true,  message: "Post deleted successfully"  });
   } catch (err) {
-    res.status(500).json({ status: "failed",  message: "Delete failed", data: { error: err }   });
+    res.status(500).json({ status: false,  message: "Delete failed", data: { error: err }   });
   }
 };
 
@@ -611,7 +611,7 @@ export const toggleLikePost = async (req: AuthRequest, res: Response): Promise<v
   try {
     const post = await Post.findById(postId);
     if (!post) {
-      res.status(404).json({ status: "failed", message: "Post not found"   });
+      res.status(404).json({ status: false, message: "Post not found"   });
       return;
     }
 
@@ -644,12 +644,12 @@ export const toggleLikePost = async (req: AuthRequest, res: Response): Promise<v
 
     res.status(200).json({
       message: isLiked ? "Post unliked" : "Post liked",
-      status: "success",
+      status: true,
       data: {
       likesCount: post.likes.length,
     }});
   } catch (err) {
-    res.status(500).json({ status: "failed",  message: "Failed to toggle like", data: { error: err }   });
+    res.status(500).json({ status: false,  message: "Failed to toggle like", data: { error: err }   });
   }
 };
 
@@ -660,7 +660,7 @@ export const toggleSavePost = async (req: AuthRequest, res: Response): Promise<v
   const userId = req.user?._id;
 
   if (!userId) {
-    res.status(400).json({ status: "failed", message: "User ID is required"   });
+    res.status(400).json({ status: false, message: "User ID is required"   });
     return;
   }
 
@@ -669,7 +669,7 @@ export const toggleSavePost = async (req: AuthRequest, res: Response): Promise<v
   try {
     const post = await Post.findById(postId);
     if (!post) {
-      res.status(404).json({ status: "failed", message: "Post not found"   });
+      res.status(404).json({ status: false, message: "Post not found"   });
       return;
     }
 
@@ -701,11 +701,11 @@ export const toggleSavePost = async (req: AuthRequest, res: Response): Promise<v
     await post.save();
     res.status(200).json({
       message: isSaved ? "Post unsaved" : "Post saved",
-      status: "success",
+      status: true,
       data: post.savedBy.length,
     });
   } catch (err) {
-    res.status(500).json({ status: "failed", message: "Failed to toggle save", data: { error: err }   });
+    res.status(500).json({ status: false, message: "Failed to toggle save", data: { error: err }   });
   }
 };
 
@@ -718,9 +718,9 @@ export const getSavedPosts = async (req: AuthRequest, res: Response): Promise<vo
       .sort({ createdAt: -1 })
       .populate("adminId", "name photoURL");
 
-    res.status(200).json({ status: "success",message:"Fetched Post Successfully",  data: posts  });
+    res.status(200).json({ status: true,message:"Fetched Post Successfully",  data: posts  });
   } catch (err) {
-    res.status(500).json({ status: "failed", message: "Failed to fetch saved posts", data: { error: err }   });
+    res.status(500).json({ status: false, message: "Failed to fetch saved posts", data: { error: err }   });
   }
 };
 
@@ -732,14 +732,14 @@ export const sharePost = async (req: AuthRequest, res: Response): Promise<void> 
   const userId = req.user?._id;
 
   if (!userId) {
-    res.status(400).json({ status: "failed",message: "User ID is required"   });
+    res.status(400).json({ status: false,message: "User ID is required"   });
     return;
   }
 
   try {
     const post = await Post.findById(postId);
     if (!post) {
-      res.status(404).json({ status: "failed", message: "Post not found"   });
+      res.status(404).json({ status: false, message: "Post not found"   });
       return;
     }
 
@@ -757,14 +757,14 @@ export const sharePost = async (req: AuthRequest, res: Response): Promise<void> 
 
     res.status(200).json({
       message: "Post share tracked successfully",
-      status: "success",
+      status: true,
       data:{
       shareUrl,
       shareCount: post.shareCount,
     }});
   } catch (err) {
     console.error("Share Post Error:", err);
-    res.status(500).json({ status: "failed", message: "Failed to share post", data: { error: err }   });
+    res.status(500).json({ status: false, message: "Failed to share post", data: { error: err }   });
   }
 };
 
@@ -774,7 +774,7 @@ export const trackPostView = async (req: AuthRequest, res: Response): Promise<vo
   const userId = req.user?._id;
 
   if (!userId) {
-    res.status(401).json({ status: "failed", message: "User not authenticated"   });
+    res.status(401).json({ status: false, message: "User not authenticated"   });
     return;
   }
 
@@ -783,7 +783,7 @@ export const trackPostView = async (req: AuthRequest, res: Response): Promise<vo
   try {
     const post = await Post.findById(postId);
     if (!post) {
-      res.status(404).json({ status: "failed",message: "Post not found"   });
+      res.status(404).json({ status: false,message: "Post not found"   });
       return;
     }
 
@@ -800,9 +800,9 @@ export const trackPostView = async (req: AuthRequest, res: Response): Promise<vo
     //Populate userId for analytics
     await post.populate("views.userId", "name email photoURL");
 
-    res.status(200).json({ status: "success",  message: "Post view tracked"  });
+    res.status(200).json({ status: true,  message: "Post view tracked"  });
   } catch (err) {
-    res.status(500).json({ status: "failed",  message: "Failed to track post view", data: { error: err }   });
+    res.status(500).json({ status: false,  message: "Failed to track post view", data: { error: err }   });
   }
 };
 
@@ -815,7 +815,7 @@ export const getPostAnalytics = async (req: AuthRequest, res: Response): Promise
   const adminId = req.user?._id;
 
   if (!adminId) {
-    res.status(400).json({ status: "failed", message: "Admin ID is required"   });
+    res.status(400).json({ status: false, message: "Admin ID is required"   });
     return;
   }
 
@@ -827,12 +827,12 @@ export const getPostAnalytics = async (req: AuthRequest, res: Response): Promise
       .populate("sharedBy", "name email photoURL");
 
     if (!post) {
-      res.status(404).json({ status: "failed", message: "Post not found"   });
+      res.status(404).json({ status: false, message: "Post not found"   });
       return;
     }
 
     if (post.adminId.toString() !== adminId.toString()) {
-      res.status(403).json({ status: "failed",  message: "Access denied. Only the post owner can view analytics."   });
+      res.status(403).json({ status: false,  message: "Access denied. Only the post owner can view analytics."   });
       return;
     }
 
@@ -907,7 +907,7 @@ export const getPostAnalytics = async (req: AuthRequest, res: Response): Promise
 
     res.status(200).json({
       message: "Post analytics fetched successfully",
-      status: "success",
+      status: true,
       data:{
       postId: post._id,
       likes: post.likes.length,
@@ -921,7 +921,7 @@ export const getPostAnalytics = async (req: AuthRequest, res: Response): Promise
       }
     });
   } catch (err) {
-    res.status(500).json({ status: "failed", message: "Failed to fetch analytics", data: { error: err }   });
+    res.status(500).json({ status: false, message: "Failed to fetch analytics", data: { error: err }   });
   }
 };
 

@@ -28,9 +28,9 @@ const createDailyMessage = (req, res) => __awaiter(void 0, void 0, void 0, funct
         const admin = yield userModel_1.default.findById(adminId).select("name photoURL");
         res.status(201).json({
             message: "Daily message created",
-            status: "success",
+            status: true,
             data: {
-                post: {
+                data: {
                     _id: newMessage._id,
                     content: newMessage.content,
                     postedBy: admin,
@@ -41,7 +41,7 @@ const createDailyMessage = (req, res) => __awaiter(void 0, void 0, void 0, funct
         });
     }
     catch (err) {
-        res.status(500).json({ status: "failed", message: "Failed to create daily message", data: { error: err } });
+        res.status(500).json({ status: false, message: "Failed to create daily message", data: { error: err } });
     }
 });
 exports.createDailyMessage = createDailyMessage;
@@ -52,12 +52,12 @@ const getAllDailyMessages = (_req, res) => __awaiter(void 0, void 0, void 0, fun
             .sort({ createdAt: -1 })
             .populate("adminId", "name photoURL");
         if (!messages || messages.length === 0) {
-            res.status(404).json({ status: "failed", message: "No daily messages found" });
+            res.status(404).json({ status: false, message: "No daily messages found" });
             return;
         }
         res.status(200).json({
             message: "Daily messages fetched",
-            status: "success",
+            status: true,
             data: {
                 messages: messages.map(msg => ({
                     _id: msg._id,
@@ -70,7 +70,7 @@ const getAllDailyMessages = (_req, res) => __awaiter(void 0, void 0, void 0, fun
         });
     }
     catch (err) {
-        res.status(500).json({ status: "failed", message: "Failed to fetch daily messages", data: { error: err } });
+        res.status(500).json({ status: false, message: "Failed to fetch daily messages", data: { error: err } });
     }
 });
 exports.getAllDailyMessages = getAllDailyMessages;
@@ -80,11 +80,11 @@ const getDailyMessageById = (req, res) => __awaiter(void 0, void 0, void 0, func
     try {
         const message = yield dailyMessageModel_1.default.findById(id).populate("adminId", "name photoURL");
         if (!message) {
-            res.status(404).json({ status: "failed", message: "Daily message not found" });
+            res.status(404).json({ status: false, message: "Daily message not found" });
             return;
         }
         res.status(200).json({
-            status: "success",
+            status: true,
             message: "Daily message fetched",
             data: {
                 _id: message._id,
@@ -96,7 +96,7 @@ const getDailyMessageById = (req, res) => __awaiter(void 0, void 0, void 0, func
         });
     }
     catch (error) {
-        res.status(500).json({ status: "failed", message: "Failed to fetch daily message by ID", data: { error: error } });
+        res.status(500).json({ status: false, message: "Failed to fetch daily message by ID", data: { error: error } });
     }
 });
 exports.getDailyMessageById = getDailyMessageById;
@@ -106,20 +106,20 @@ const updateDailyMessage = (req, res) => __awaiter(void 0, void 0, void 0, funct
     const { id } = req.params;
     const { content } = req.body;
     if (((_a = req.user) === null || _a === void 0 ? void 0 : _a.role) !== "admin") {
-        res.status(403).json({ status: "failed", message: "Only admin can update daily messages" });
+        res.status(403).json({ status: false, message: "Only admin can update daily messages" });
         return;
     }
     try {
         const message = yield dailyMessageModel_1.default.findByIdAndUpdate(id, { content }, { new: true }).populate("adminId", "name photoURL");
         if (!message) {
-            res.status(404).json({ status: "failed", message: "Daily message not found" });
+            res.status(404).json({ status: false, message: "Daily message not found" });
             return;
         }
         res.status(200).json({
             message: "Message updated",
-            status: "success",
+            status: true,
             data: {
-                post: {
+                data: {
                     _id: message._id,
                     content: message.content,
                     postedBy: message.adminId,
@@ -130,7 +130,7 @@ const updateDailyMessage = (req, res) => __awaiter(void 0, void 0, void 0, funct
         });
     }
     catch (error) {
-        res.status(500).json({ status: "failed", message: "Update failed", data: { error: error } });
+        res.status(500).json({ status: false, message: "Update failed", data: { error: error } });
     }
 });
 exports.updateDailyMessage = updateDailyMessage;
@@ -139,19 +139,19 @@ const deleteDailyMessage = (req, res) => __awaiter(void 0, void 0, void 0, funct
     var _a;
     const { id } = req.params;
     if (((_a = req.user) === null || _a === void 0 ? void 0 : _a.role) !== "admin") {
-        res.status(403).json({ status: "failed", message: "Only admin can delete daily messages" });
+        res.status(403).json({ status: false, message: "Only admin can delete daily messages" });
         return;
     }
     try {
         const message = yield dailyMessageModel_1.default.findByIdAndDelete(id);
         if (!message) {
-            res.status(404).json({ status: "failed", message: "Message not found" });
+            res.status(404).json({ status: false, message: "Message not found" });
             return;
         }
-        res.status(200).json({ status: "success", message: "Message deleted successfully" });
+        res.status(200).json({ status: true, message: "Message deleted successfully" });
     }
     catch (error) {
-        res.status(500).json({ status: "failed", message: "Delete failed", data: { error: error } });
+        res.status(500).json({ status: false, message: "Delete failed", data: { error: error } });
     }
 });
 exports.deleteDailyMessage = deleteDailyMessage;

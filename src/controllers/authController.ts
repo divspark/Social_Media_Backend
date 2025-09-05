@@ -76,7 +76,7 @@ export const phoneLoginOrCreate = async (req: Request, res: Response): Promise<v
   const { idToken } = req.body;
 
   if (!idToken) {
-    res.status(400).json({ status: "failed",  message: "idToken is required"   });
+    res.status(400).json({ status: false,  message: "idToken is required"   });
     return;
   }
 
@@ -91,14 +91,14 @@ export const phoneLoginOrCreate = async (req: Request, res: Response): Promise<v
         uid,
         role: "pending"
       });
-      res.status(201).json({ message: "New phone user created, please complete profile",status: "Success",data:{user, idToken} });
+      res.status(201).json({ message: "New phone user created, please complete profile",status: true,data:{user, idToken} });
       return;
     }
     const data = {idToken,user}
-    res.status(200).json({ message: `${user.role} phone login successful`, data,status: "Success" });
+    res.status(200).json({ message: `${user.role} phone login successful`, data,status: true });
   } catch (err) {
     console.error("Phone login error:", err);
-    res.status(401).json({ message: "Invalid token",status:"Failed", data: { data: { error: err } } });
+    res.status(401).json({ message: "Invalid token",status: false, data: { data: { error: err } } });
   }
 };
 
@@ -109,7 +109,7 @@ export const completeProfile = async (req: AuthRequest, res: Response): Promise<
 
   try {
     if (!userId) {
-      res.status(400).json({ status: "failed",  message: "Invalid user ID"   });
+      res.status(400).json({ status: false,  message: "Invalid user ID"   });
       return;
     }
 
@@ -132,9 +132,9 @@ export const completeProfile = async (req: AuthRequest, res: Response): Promise<
       { new: true }
     );
 
-    res.status(200).json({ status: "success",  message: "Profile completed",data:{ user: updatedUser } });
+    res.status(200).json({ status: true,  message: "Profile completed",data:{ user: updatedUser } });
   } catch (err) {
-    res.status(500).json({ status: "failed",  message: "Profile completion failed", data: { error: err }   });
+    res.status(500).json({ status: false,  message: "Profile completion failed", data: { error: err }   });
   }
 };
 
@@ -144,13 +144,13 @@ export const getOwnProfile = async (req: AuthRequest, res: Response): Promise<vo
   try {
     const user = await User.findById(req.user?._id);
     if (!user) {
-      res.status(404).json({ status: "failed",  message: "User not found"   });
+      res.status(404).json({ status: false,  message: "User not found"   });
       return;
     }
 
-    res.status(200).json({ status: "success",message:"Profile Fetched Successfully", data:{ user  }});
+    res.status(200).json({ status: true,message:"Profile Fetched Successfully", data:{ user  }});
   } catch (err) {
-    res.status(500).json({ status: "failed",  message: "Failed to fetch profile", data: { error: err }   });
+    res.status(500).json({ status: false,  message: "Failed to fetch profile", data: { error: err }   });
   }
 };
 
@@ -175,9 +175,9 @@ export const updateOwnProfile = async (req: AuthRequest, res: Response): Promise
 
     const updatedUser = await User.findByIdAndUpdate(userId, updateFields, { new: true });
 
-    res.status(200).json({ status: "success",  message: "Profile updated", data:{user: updatedUser  }});
+    res.status(200).json({ status: true,  message: "Profile updated", data:{user: updatedUser  }});
   } catch (err) {
-    res.status(500).json({ status: "failed",  message: "Update failed", data: { error: err }   });
+    res.status(500).json({ status: false,  message: "Update failed", data: { error: err }   });
   }
 };
 
@@ -187,13 +187,13 @@ export const getUserProfileByUID = async (req: AuthRequest, res: Response): Prom
     const user = await User.findOne({ uid: req.params.uid });
 
     if (!user) {
-      res.status(404).json({ status: "failed",  message: "User not found"   });
+      res.status(404).json({ status: false,  message: "User not found"   });
       return;
     }
 
-    res.status(200).json({ status: "success",message:"User fetched successfully", data:{ user } });
+    res.status(200).json({ status: true,message:"User fetched successfully", data:{ user } });
   } catch (err) {
-    res.status(500).json({ status: "failed",  message: "Failed to fetch user", data: { error: err }   });
+    res.status(500).json({ status: false,  message: "Failed to fetch user", data: { error: err }   });
   }
 };
 
@@ -204,12 +204,12 @@ export const saveFcmToken = async (req: AuthRequest, res: Response) => {
   const { fcmToken } = req.body;
 
   if (!fcmToken) {
-    res.status(400).json({ status: "failed",  message: "FCM token is required"   });
+    res.status(400).json({ status: false,  message: "FCM token is required"   });
     return;
   }
 
   await User.findByIdAndUpdate(userId, { fcmToken });
-  res.status(200).json({ status: "success",  message: "FCM token saved"  });
+  res.status(200).json({ status: true,  message: "FCM token saved"  });
 };
 
 
@@ -218,7 +218,7 @@ export const blockOrUnblockUser = async (req: AuthRequest, res: Response): Promi
   const { userId, block, reason, durationInDays } = req.body;
 
   if (!userId || typeof block !== "boolean") {
-    res.status(400).json({ status: "failed",  message: "userId and block (true/false) are required"   });
+    res.status(400).json({ status: false,  message: "userId and block (true/false) are required"   });
     return;
   }
 
@@ -234,7 +234,7 @@ export const blockOrUnblockUser = async (req: AuthRequest, res: Response): Promi
     const updatedUserDoc = await User.findByIdAndUpdate(userId, updateFields, { new: true });
 
     if (!updatedUserDoc) {
-      res.status(404).json({ status: "failed",  message: "User not found"   });
+      res.status(404).json({ status: false,  message: "User not found"   });
       return;
     }
 
@@ -245,12 +245,12 @@ export const blockOrUnblockUser = async (req: AuthRequest, res: Response): Promi
       message: block
         ? `User blocked ${durationInDays ? `for ${durationInDays} day(s)` : "permanently"}`
         : "User unblocked",
-        status: "success",
+        status: true,
       data:{
       user,
     }});
   } catch (err) {
-    res.status(500).json({ status: "failed",  message: "Failed to update user block status", data: { error: err }   });
+    res.status(500).json({ status: false,  message: "Failed to update user block status", data: { error: err }   });
   }
 };
 
@@ -271,9 +271,9 @@ export const getBlockedUsers = async (_req: Request, res: Response): Promise<voi
       blockedUntil: user.blockedUntil ? user.blockedUntil : "Permanent",
     }));
 
-    res.status(200).json({ status: "success",message:"Blocked user fetched successfully", data:{ blockedUsers: formattedUsers } });
+    res.status(200).json({ status: true,message:"Blocked user fetched successfully", data:{ blockedUsers: formattedUsers } });
   } catch (err) {
-    res.status(500).json({ status: "failed",  message: "Failed to fetch blocked users", data: { error: err }   });
+    res.status(500).json({ status: false,  message: "Failed to fetch blocked users", data: { error: err }   });
   }
 };
 
@@ -282,7 +282,7 @@ export const setUserRestrictions = async (req: AuthRequest, res: Response): Prom
   const { userId, restrictions } = req.body;
 
   if (!userId || typeof restrictions !== "object") {
-    res.status(400).json({ status: "failed",  message: "userId and restrictions are required"   });
+    res.status(400).json({ status: false,  message: "userId and restrictions are required"   });
     return;
   }
 
@@ -293,9 +293,9 @@ export const setUserRestrictions = async (req: AuthRequest, res: Response): Prom
       { new: true }
     ).select("-restrictions"); // remove from response if you want
 
-    res.status(200).json({ status: "success",  message: "User restrictions updated",data:{ user: updatedUser  }});
+    res.status(200).json({ status: true,  message: "User restrictions updated",data:{ user: updatedUser  }});
   } catch (err) {
-    res.status(500).json({ status: "failed",  message: "Failed to update restrictions", data: { error: err }   });
+    res.status(500).json({ status: false,  message: "Failed to update restrictions", data: { error: err }   });
   }
 };
 
@@ -312,9 +312,9 @@ export const getRestrictedUsers = async (_req: Request, res: Response): Promise<
       ],
     }).select("name email role restrictions");
 
-    res.status(200).json({ status: "success",message:"Restricted Users fetched successfully",  data:{restrictedUsers: users } });
+    res.status(200).json({ status: true,message:"Restricted Users fetched successfully",  data:{data: users } });
   } catch (err) {
-    res.status(500).json({ status: "failed",  message: "Failed to fetch restricted users", data: { error: err }   });
+    res.status(500).json({ status: false,  message: "Failed to fetch restricted users", data: { error: err }   });
   }
 };
 
@@ -325,13 +325,13 @@ export const updateUserRole = async (req: AuthRequest, res: Response): Promise<v
   try {
     // Allow only admins to change role
     if (req.user?.role !== "admin") {
-      res.status(403).json({ status: "failed",  message: "Forbidden: Only admins can change roles"   });
+      res.status(403).json({ status: false,  message: "Forbidden: Only admins can change roles"   });
       return;
     }
 
     // Validate role
     if (!role || !["user", "admin"].includes(role)) {
-      res.status(400).json({ status: "failed",  message: "Invalid role. Must be 'user' or 'admin'."   });
+      res.status(400).json({ status: false,  message: "Invalid role. Must be 'user' or 'admin'."   });
       return;
     }
 
@@ -343,17 +343,17 @@ export const updateUserRole = async (req: AuthRequest, res: Response): Promise<v
     );
 
     if (!updatedUser) {
-      res.status(404).json({ status: "failed",  message: "User not found"   });
+      res.status(404).json({ status: false,  message: "User not found"   });
       return;
     }
 
     res.status(200).json({
       message: "User role updated successfully",
-      status: "success",
+      status: true,
       data:{
       user: updatedUser,
     }});
   } catch (err) {
-    res.status(500).json({ status: "failed",  message: "Failed to update user role", data: { error: err }   });
+    res.status(500).json({ status: false,  message: "Failed to update user role", data: { error: err }   });
   }
 };

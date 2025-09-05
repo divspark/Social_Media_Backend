@@ -62,7 +62,7 @@ export const verifyToken = async (req: AuthRequest, res: Response, next: NextFun
 // Admin-only access
 export const requireAdmin = (req: AuthRequest, res: Response, next: NextFunction) => {
   if (req.user?.role !== "admin") {
-    res.status(403).json({ status: "failed",  message: "Forbidden: Admins only"   });
+    res.status(403).json({ status: false,  message: "Forbidden: Admins only"   });
     return;
   }
   next();
@@ -71,7 +71,7 @@ export const requireAdmin = (req: AuthRequest, res: Response, next: NextFunction
 //User-only access
 export const requireUser = (req: AuthRequest, res: Response, next: NextFunction) => {
   if (req.user?.role !== "user") {
-    res.status(403).json({ status: "failed",message: "Forbidden: Users only"   });
+    res.status(403).json({ status: false,message: "Forbidden: Users only"   });
     return;
   }
   next();

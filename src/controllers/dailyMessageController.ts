@@ -22,9 +22,9 @@ export const createDailyMessage = async (req: AuthRequest, res: Response) => {
 
     res.status(201).json({
       message: "Daily message created",
-      status: "success",
+      status: true,
       data:{
-      post: {
+      data: {
         _id: newMessage._id,
         content: newMessage.content,
         postedBy: admin,
@@ -33,7 +33,7 @@ export const createDailyMessage = async (req: AuthRequest, res: Response) => {
       },
    }});
   } catch (err) {
-    res.status(500).json({ status: "failed", message: "Failed to create daily message", data: { error: err }   });
+    res.status(500).json({ status: false, message: "Failed to create daily message", data: { error: err }   });
   }
 };
 
@@ -45,13 +45,13 @@ export const getAllDailyMessages = async (_req: Request, res: Response) => {
       .populate("adminId", "name photoURL");
 
     if (!messages || messages.length === 0) {
-      res.status(404).json({ status: "failed", message: "No daily messages found"   });
+      res.status(404).json({ status: false, message: "No daily messages found"   });
       return;
     }
 
     res.status(200).json({
       message: "Daily messages fetched",
-      status: "success",
+      status: true,
       data: {
         messages: messages.map(msg => ({
           _id: msg._id,
@@ -63,7 +63,7 @@ export const getAllDailyMessages = async (_req: Request, res: Response) => {
       }
     });
   } catch (err) {
-    res.status(500).json({ status: "failed", message: "Failed to fetch daily messages", data: { error: err }   });
+    res.status(500).json({ status: false, message: "Failed to fetch daily messages", data: { error: err }   });
   }
 };
 
@@ -76,12 +76,12 @@ export const getDailyMessageById = async (req: Request, res: Response) => {
     const message = await DailyMessage.findById(id).populate("adminId", "name photoURL");
 
     if (!message) {
-      res.status(404).json({ status: "failed", message: "Daily message not found"   });
+      res.status(404).json({ status: false, message: "Daily message not found"   });
       return;
     }
 
     res.status(200).json({
-      status: "success",
+      status: true,
       message: "Daily message fetched",
       data:{
       _id: message._id,
@@ -91,7 +91,7 @@ export const getDailyMessageById = async (req: Request, res: Response) => {
       timeAgo: dayjs(message.createdAt).fromNow(),
    }});
   } catch (error) {
-    res.status(500).json({ status: "failed",message: "Failed to fetch daily message by ID", data:{error:error   }});
+    res.status(500).json({ status: false,message: "Failed to fetch daily message by ID", data:{error:error   }});
   }
 };
 
@@ -101,7 +101,7 @@ export const updateDailyMessage = async (req: AuthRequest, res: Response) => {
   const { content } = req.body;
 
   if (req.user?.role !== "admin") {
-    res.status(403).json({ status: "failed", message: "Only admin can update daily messages"   });
+    res.status(403).json({ status: false, message: "Only admin can update daily messages"   });
     return;
   }
 
@@ -109,15 +109,15 @@ export const updateDailyMessage = async (req: AuthRequest, res: Response) => {
     const message = await DailyMessage.findByIdAndUpdate(id, { content }, { new: true }).populate("adminId", "name photoURL");
 
     if (!message) {
-      res.status(404).json({ status: "failed", message: "Daily message not found"   });
+      res.status(404).json({ status: false, message: "Daily message not found"   });
       return;
     }
 
     res.status(200).json({
       message: "Message updated",
-      status: "success",
+      status: true,
       data:{
-      post: {
+      data: {
         _id: message._id,
         content: message.content,
         postedBy: message.adminId,
@@ -126,7 +126,7 @@ export const updateDailyMessage = async (req: AuthRequest, res: Response) => {
       },
    }});
   } catch (error) {
-    res.status(500).json({ status: "failed", message: "Update failed", data:{error:error   }   });
+    res.status(500).json({ status: false, message: "Update failed", data:{error:error   }   });
   }
 };
 
@@ -135,7 +135,7 @@ export const deleteDailyMessage = async (req: AuthRequest, res: Response) => {
   const { id } = req.params;
 
   if (req.user?.role !== "admin") {
-    res.status(403).json({ status: "failed", message: "Only admin can delete daily messages"   });
+    res.status(403).json({ status: false, message: "Only admin can delete daily messages"   });
     return;
   }
 
@@ -143,12 +143,12 @@ export const deleteDailyMessage = async (req: AuthRequest, res: Response) => {
     const message = await DailyMessage.findByIdAndDelete(id);
 
     if (!message) {
-      res.status(404).json({ status: "failed",  message: "Message not found"   });
+      res.status(404).json({ status: false,  message: "Message not found"   });
       return;
     }
 
-    res.status(200).json({ status: "success",  message: "Message deleted successfully"  });
+    res.status(200).json({ status: true,  message: "Message deleted successfully"  });
   } catch (error) {
-    res.status(500).json({ status: "failed", message: "Delete failed", data:{error:error   }   });
+    res.status(500).json({ status: false, message: "Delete failed", data:{error:error   }   });
   }
 };

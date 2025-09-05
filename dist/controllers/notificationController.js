@@ -46,11 +46,11 @@ const getNotifications = (req, res) => {
                 },
             });
         });
-        res.status(200).json({ status: "success", data: { notifications: grouped } });
+        res.status(200).json({ status: true, data: { data: grouped } });
     })
         .catch(error => {
         console.error("Failed to fetch notifications:", error);
-        res.status(500).json({ status: "failed", message: "Failed to fetch notifications", data: { error: error } });
+        res.status(500).json({ status: false, message: "Failed to fetch notifications", data: { error: error } });
     });
 };
 exports.getNotifications = getNotifications;
@@ -62,17 +62,17 @@ const markAsRead = (req, res) => {
     return notificationModel_1.default.findOne({ _id: id, receiverId: userId })
         .then(notification => {
         if (!notification) {
-            res.status(404).json({ status: "failed", message: "Notification not found" });
+            res.status(404).json({ status: false, message: "Notification not found" });
             return;
         }
         notification.isRead = true;
         return notification.save().then(() => {
-            res.status(200).json({ status: "success", message: "Notification marked as read" });
+            res.status(200).json({ status: true, message: "Notification marked as read" });
         });
     })
         .catch(error => {
         console.error("Failed to mark as read:", error);
-        res.status(500).json({ status: "failed", message: "Failed to mark as read", data: { error: error } });
+        res.status(500).json({ status: false, message: "Failed to mark as read", data: { error: error } });
     });
 };
 exports.markAsRead = markAsRead;
@@ -81,20 +81,20 @@ const markAllAsRead = (req, res) => {
     var _a;
     const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a._id;
     if (!userId) {
-        res.status(401).json({ status: "failed", message: "Unauthorized" });
+        res.status(401).json({ status: false, message: "Unauthorized" });
         return Promise.resolve();
     }
     return notificationModel_1.default.updateMany({ receiverId: userId, isRead: false }, { $set: { isRead: true } })
         .then(result => {
         res.status(200).json({
-            status: "success",
+            status: true,
             message: `${result.modifiedCount} notifications marked as read`,
         });
     })
         .catch(error => {
         console.error("Error marking all notifications as read:", error);
         res.status(500).json({
-            status: "failed",
+            status: false,
             message: "Failed to mark all notifications as read",
             data: { error: error },
         });

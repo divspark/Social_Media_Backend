@@ -28,13 +28,13 @@ const addComment = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     const { postId, content } = req.body;
     const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a._id;
     if (!userId) {
-        res.status(401).json({ status: "failed", message: "Unauthorized" });
+        res.status(401).json({ status: false, message: "Unauthorized" });
         return;
     }
     try {
         const existingComment = yield commentModel_1.default.findOne({ postId, userId });
         if (existingComment) {
-            res.status(400).json({ status: "failed", message: "You have already commented on this post." });
+            res.status(400).json({ status: false, message: "You have already commented on this post." });
             return;
         }
         const comment = yield commentModel_1.default.create({ postId, userId, content });
@@ -55,15 +55,15 @@ const addComment = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         }
         res.status(201).json({
             message: "Comment added successfully",
-            status: "success",
+            status: true,
             data: {
-                comment: Object.assign(Object.assign({}, populated.toObject()), { timeAgo: (0, dayjs_1.default)(comment.createdAt).fromNow() }),
+                data: Object.assign(Object.assign({}, populated.toObject()), { timeAgo: (0, dayjs_1.default)(comment.createdAt).fromNow() }),
             }
         });
     }
     catch (error) {
         console.error("Add Comment Error:", error);
-        res.status(500).json({ status: "failed", message: "Failed to add comment", data: { error: error } });
+        res.status(500).json({ status: false, message: "Failed to add comment", data: { error: error } });
     }
 });
 exports.addComment = addComment;
@@ -74,17 +74,17 @@ const replyToComment = (req, res) => __awaiter(void 0, void 0, void 0, function*
     const { content } = req.body;
     const adminId = (_a = req.user) === null || _a === void 0 ? void 0 : _a._id;
     if (!adminId || ((_b = req.user) === null || _b === void 0 ? void 0 : _b.role) !== "admin") {
-        res.status(403).json({ status: "failed", message: "Only admin can reply to comments" });
+        res.status(403).json({ status: false, message: "Only admin can reply to comments" });
         return;
     }
     try {
         const comment = yield commentModel_1.default.findById(commentId);
         if (!comment) {
-            res.status(404).json({ status: "failed", message: "Comment not found" });
+            res.status(404).json({ status: false, message: "Comment not found" });
             return;
         }
         if ((_c = comment.reply) === null || _c === void 0 ? void 0 : _c.content) {
-            res.status(400).json({ status: "failed", message: "This comment already has a reply." });
+            res.status(400).json({ status: false, message: "This comment already has a reply." });
             return;
         }
         comment.reply = {
@@ -107,7 +107,7 @@ const replyToComment = (req, res) => __awaiter(void 0, void 0, void 0, function*
         const updated = yield commentModel_1.default.findById(commentId).populate("reply.adminId", "name photoURL");
         res.status(200).json({
             message: "Reply added successfully",
-            status: "success",
+            status: true,
             data: {
                 comment: updated,
             }
@@ -115,7 +115,7 @@ const replyToComment = (req, res) => __awaiter(void 0, void 0, void 0, function*
     }
     catch (error) {
         console.error("Reply Error:", error);
-        res.status(500).json({ status: "failed", message: "Failed to reply to comment", data: { error: error } });
+        res.status(500).json({ status: false, message: "Failed to reply to comment", data: { error: error } });
     }
 });
 exports.replyToComment = replyToComment;
@@ -124,28 +124,28 @@ const deleteComment = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     const { commentId } = req.params;
     const currentUser = req.user;
     if (!currentUser) {
-        res.status(401).json({ status: "failed", message: "Unauthorized" });
+        res.status(401).json({ status: false, message: "Unauthorized" });
         return;
     }
     try {
         const comment = yield commentModel_1.default.findById(commentId);
         if (!comment) {
-            res.status(404).json({ status: "failed", message: "Comment not found" });
+            res.status(404).json({ status: false, message: "Comment not found" });
             return;
         }
         const isOwner = comment.userId.toString() === currentUser._id.toString();
         const isAdmin = currentUser.role === "admin";
         if (isAdmin || isOwner) {
             yield commentModel_1.default.findByIdAndDelete(commentId);
-            res.status(200).json({ status: "success", message: "Comment deleted successfully" });
+            res.status(200).json({ status: true, message: "Comment deleted successfully" });
         }
         else {
-            res.status(403).json({ status: "failed", message: "Unauthorized to delete this comment" });
+            res.status(403).json({ status: false, message: "Unauthorized to delete this comment" });
         }
     }
     catch (error) {
         console.error("Delete Comment Error:", error);
-        res.status(500).json({ status: "failed", message: "Failed to delete comment", data: { error: error } });
+        res.status(500).json({ status: false, message: "Failed to delete comment", data: { error: error } });
     }
 });
 exports.deleteComment = deleteComment;
@@ -171,18 +171,18 @@ const getCommentsByPost = (req, res) => __awaiter(void 0, void 0, void 0, functi
         });
         res.status(200).json({
             message: "Comments fetched successfully",
-            status: "success",
+            status: true,
             data: {
                 total,
                 currentPage: page,
                 totalPages: Math.ceil(total / limit),
-                comments: formatted,
+                data: formatted,
             }
         });
     }
     catch (error) {
         console.error("Get Comments Error:", error);
-        res.status(500).json({ status: "failed", message: "Failed to fetch comments", data: { error: error } });
+        res.status(500).json({ status: false, message: "Failed to fetch comments", data: { error: error } });
     }
 });
 exports.getCommentsByPost = getCommentsByPost;
@@ -192,13 +192,13 @@ const toggleLikeComment = (req, res) => __awaiter(void 0, void 0, void 0, functi
     const { commentId } = req.params;
     const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a._id;
     if (!userId) {
-        res.status(400).json({ status: "failed", message: "User ID is required" });
+        res.status(400).json({ status: false, message: "User ID is required" });
         return;
     }
     try {
         const comment = yield commentModel_1.default.findById(commentId);
         if (!comment) {
-            res.status(404).json({ status: "failed", message: "Comment not found" });
+            res.status(404).json({ status: false, message: "Comment not found" });
             return;
         }
         const userObjectId = new mongoose_1.default.Types.ObjectId(userId);
@@ -223,7 +223,7 @@ const toggleLikeComment = (req, res) => __awaiter(void 0, void 0, void 0, functi
         yield comment.save();
         res.status(200).json({
             message: alreadyLiked ? "Comment unliked" : "Comment liked",
-            status: "success",
+            status: true,
             data: {
                 likesCount: comment.likes.length,
             }
@@ -231,7 +231,7 @@ const toggleLikeComment = (req, res) => __awaiter(void 0, void 0, void 0, functi
     }
     catch (error) {
         console.error("Toggle Like Error:", error);
-        res.status(500).json({ status: "failed", message: "Failed to like/unlike comment", data: { error: error } });
+        res.status(500).json({ status: false, message: "Failed to like/unlike comment", data: { error: error } });
     }
 });
 exports.toggleLikeComment = toggleLikeComment;

@@ -19,26 +19,26 @@ const checkFeatureAccess = (feature) => (req, res, next) => __awaiter(void 0, vo
     try {
         const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a._id;
         if (!userId) {
-            res.status(401).json({ status: "failed", message: "Unauthorized" });
+            res.status(401).json({ status: false, message: "Unauthorized" });
             return;
         }
         const user = yield userModel_1.default.findById(userId);
         if (!user) {
-            res.status(404).json({ status: "failed", message: "User not found" });
+            res.status(404).json({ status: false, message: "User not found" });
             return;
         }
         const isRestricted = (_c = (_b = user.restrictions) === null || _b === void 0 ? void 0 : _b.get(feature)) !== null && _c !== void 0 ? _c : false;
         if (isRestricted) {
             res.status(403).json({
                 message: `You are restricted from using the '${feature}' feature.`,
-                status: "failed"
+                status: false
             });
             return;
         }
         next();
     }
     catch (err) {
-        res.status(500).json({ status: "failed", message: "Feature access check failed", data: { error: err } });
+        res.status(500).json({ status: false, message: "Feature access check failed", data: { error: err } });
     }
 });
 exports.checkFeatureAccess = checkFeatureAccess;

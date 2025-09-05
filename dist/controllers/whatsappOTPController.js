@@ -28,7 +28,7 @@ function sendOtp(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         const { mobile } = req.body;
         if (!mobile) {
-            res.status(400).json({ status: "failed", error: "Missing required fields" });
+            res.status(400).json({ status: false, error: "Missing required fields" });
             return;
         }
         let user = yield userModel_1.default.findOne({ phone: mobile });
@@ -43,7 +43,7 @@ function sendOtp(req, res) {
             .then((canSend) => {
             if (!canSend) {
                 res.status(429).json({
-                    status: "failed",
+                    status: false,
                     message: "OTP already sent. Please wait before requesting again."
                 });
                 return Promise.reject("rate_limit");
@@ -58,7 +58,7 @@ function sendOtp(req, res) {
                 .then(() => whatsappOtpModel_1.OTPModel.create({ phoneNumber: mobile, otp, expiresAt }))
                 .then(() => res.status(200).json({
                 message: "OTP sent successfully",
-                status: "success",
+                status: true,
                 data: { expiresIn: 60 }
             }));
         })
@@ -69,7 +69,7 @@ function sendOtp(req, res) {
                     (err && typeof err === "object" && "error" in err && err.error) ||
                     (typeof err === "string" && err) ||
                     "Internal error";
-                res.status(500).json({ status: "failed", message: "Rate limiy reached! Try after some time", data: { error: msg } });
+                res.status(500).json({ status: false, message: "Rate limiy reached! Try after some time", data: { error: msg } });
             }
         });
     });
@@ -166,11 +166,11 @@ function logoutController(req, res) {
                 sameSite: "strict",
                 path: "/",
             });
-            res.status(200).json({ status: "success", message: "Logged out successfully" });
+            res.status(200).json({ status: true, message: "Logged out successfully" });
         }
         catch (err) {
             console.error("Logout error:", err);
-            res.status(500).json({ status: "failed", message: "Internal server error" });
+            res.status(500).json({ status: false, message: "Internal server error" });
         }
     });
 }

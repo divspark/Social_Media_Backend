@@ -64,7 +64,7 @@ exports.verifyToken = verifyToken;
 const requireAdmin = (req, res, next) => {
     var _a;
     if (((_a = req.user) === null || _a === void 0 ? void 0 : _a.role) !== "admin") {
-        res.status(403).json({ status: "failed", message: "Forbidden: Admins only" });
+        res.status(403).json({ status: false, message: "Forbidden: Admins only" });
         return;
     }
     next();
@@ -74,7 +74,7 @@ exports.requireAdmin = requireAdmin;
 const requireUser = (req, res, next) => {
     var _a;
     if (((_a = req.user) === null || _a === void 0 ? void 0 : _a.role) !== "user") {
-        res.status(403).json({ status: "failed", message: "Forbidden: Users only" });
+        res.status(403).json({ status: false, message: "Forbidden: Users only" });
         return;
     }
     next();

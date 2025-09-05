@@ -19,25 +19,25 @@ const checkBlockedUser = (req, res, next) => __awaiter(void 0, void 0, void 0, f
     try {
         const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a._id;
         if (!userId) {
-            res.status(401).json({ status: "failed", message: "User authentication failed" });
+            res.status(401).json({ status: false, message: "User authentication failed" });
             return;
         }
         const user = yield userModel_1.default.findById(userId);
         if (!user) {
-            res.status(404).json({ status: "failed", message: "User not found" });
+            res.status(404).json({ status: false, message: "User not found" });
             return;
         }
         if (user.isBlocked) {
             if (!user.blockedUntil) {
                 res.status(403).json({
-                    message: "You are permanently blocked from all activities.", status: "failed"
+                    message: "You are permanently blocked from all activities.", status: false
                 });
                 return;
             }
             const now = new Date();
             if (user.blockedUntil > now) {
                 res.status(403).json({
-                    message: `You are temporarily blocked until ${user.blockedUntil.toLocaleString()}.`, status: "failed"
+                    message: `You are temporarily blocked until ${user.blockedUntil.toLocaleString()}.`, status: false
                 });
                 return;
             }
@@ -50,7 +50,7 @@ const checkBlockedUser = (req, res, next) => __awaiter(void 0, void 0, void 0, f
         next();
     }
     catch (err) {
-        res.status(500).json({ status: "failed", message: "Block check failed", data: { error: err } });
+        res.status(500).json({ status: false, message: "Block check failed", data: { error: err } });
     }
 });
 exports.checkBlockedUser = checkBlockedUser;

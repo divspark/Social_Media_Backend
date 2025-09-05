@@ -42,7 +42,7 @@ const createPost = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     const adminId = (_a = req.user) === null || _a === void 0 ? void 0 : _a._id;
     try {
         if (!category || typeof category !== "string") {
-            res.status(400).json({ status: "failed", message: "Category is required" });
+            res.status(400).json({ status: false, message: "Category is required" });
             return;
         }
         let images = [];
@@ -53,7 +53,7 @@ const createPost = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
             const imageFiles = req.files["images"];
             for (const file of imageFiles) {
                 if (file.size > 15 * 1024 * 1024) {
-                    res.status(400).json({ status: "failed", message: "Each image must be under 15MB" });
+                    res.status(400).json({ status: false, message: "Each image must be under 15MB" });
                     return;
                 }
                 const imageUrl = yield new Promise((resolve, reject) => {
@@ -80,7 +80,7 @@ const createPost = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         if (req.files && "video" in req.files) {
             const videoFile = req.files["video"][0];
             if (videoFile.size > 1024 * 1024 * 1024) {
-                res.status(400).json({ status: "failed", message: "Video too large (max 1GB)" });
+                res.status(400).json({ status: false, message: "Video too large (max 1GB)" });
                 return;
             }
             video = yield new Promise((resolve, reject) => {
@@ -105,7 +105,7 @@ const createPost = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         if (req.files && "videoThumbnail" in req.files) {
             const thumbnailFile = req.files["videoThumbnail"][0];
             if (thumbnailFile.size > 5 * 1024 * 1024) {
-                res.status(400).json({ status: "failed", message: "Thumbnail too large (max 5MB)" });
+                res.status(400).json({ status: false, message: "Thumbnail too large (max 5MB)" });
                 return;
             }
             videoThumbnail = yield new Promise((resolve, reject) => {
@@ -142,10 +142,10 @@ const createPost = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         const admin = postObj.adminId;
         res.status(201).json({
             message: "Post created successfully",
-            status: "success",
+            status: true,
             data: {
                 category: category.toLowerCase(),
-                post: Object.assign(Object.assign({}, postObj), { timeAgo: (0, dayjs_1.default)(post.createdAt).fromNow(), adminId: {
+                data: Object.assign(Object.assign({}, postObj), { timeAgo: (0, dayjs_1.default)(post.createdAt).fromNow(), adminId: {
                         _id: admin._id,
                         name: admin.name,
                         photoURL: admin.photoURL,
@@ -155,7 +155,7 @@ const createPost = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     }
     catch (err) {
         console.error("Create Post Error:", err);
-        res.status(500).json({ status: "failed", message: "Failed to create post", data: { error: err } });
+        res.status(500).json({ status: false, message: "Failed to create post", data: { error: err } });
     }
 });
 exports.createPost = createPost;
@@ -177,13 +177,13 @@ const votePollOption = (req, res) => __awaiter(void 0, void 0, void 0, function*
     if (!mongoose_1.default.Types.ObjectId.isValid(postId) ||
         !mongoose_1.default.Types.ObjectId.isValid(optionId) ||
         !userId) {
-        res.status(400).json({ status: "failed", message: "Invalid postId, optionId, or user not authenticated" });
+        res.status(400).json({ status: false, message: "Invalid postId, optionId, or user not authenticated" });
         return;
     }
     try {
         const post = yield postModel_1.default.findById(postId);
         if (!post || post.postType !== "poll") {
-            res.status(404).json({ status: "failed", message: "Poll post not found" });
+            res.status(404).json({ status: false, message: "Poll post not found" });
             return;
         }
         // 🧹 Remove user's previous vote
@@ -198,7 +198,7 @@ const votePollOption = (req, res) => __awaiter(void 0, void 0, void 0, function*
         //  Add vote to selected option
         const selectedOption = (_c = post.pollOptions) === null || _c === void 0 ? void 0 : _c.find((opt) => opt._id.toString() === optionId);
         if (!selectedOption) {
-            res.status(404).json({ status: "failed", message: "Poll option not found" });
+            res.status(404).json({ status: false, message: "Poll option not found" });
             return;
         }
         selectedOption.votes += 1;
@@ -207,7 +207,7 @@ const votePollOption = (req, res) => __awaiter(void 0, void 0, void 0, function*
         const result = getVotePercentages(post.pollOptions || []);
         res.status(200).json({
             message: "Vote cast successfully",
-            status: "success",
+            status: true,
             data: {
                 postId,
                 votedOptionId: optionId,
@@ -216,7 +216,7 @@ const votePollOption = (req, res) => __awaiter(void 0, void 0, void 0, function*
         });
     }
     catch (err) {
-        res.status(500).json({ status: "failed", message: "Voting failed", data: { error: err } });
+        res.status(500).json({ status: false, message: "Voting failed", data: { error: err } });
     }
 });
 exports.votePollOption = votePollOption;
@@ -225,13 +225,13 @@ const getPostVotePollById = (req, res) => __awaiter(void 0, void 0, void 0, func
     const { id } = req.params;
     const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a._id;
     if (!mongoose_1.default.Types.ObjectId.isValid(id)) {
-        res.status(400).json({ status: "failed", message: "Invalid post ID" });
+        res.status(400).json({ status: false, message: "Invalid post ID" });
         return;
     }
     try {
         const post = yield postModel_1.default.findById(id).populate("adminId", "name photoURL");
         if (!post) {
-            res.status(404).json({ status: "failed", message: "Post not found" });
+            res.status(404).json({ status: false, message: "Post not found" });
             return;
         }
         const postObj = post.toObject();
@@ -252,12 +252,12 @@ const getPostVotePollById = (req, res) => __awaiter(void 0, void 0, void 0, func
         }
         res.status(200).json({
             message: "Post fetched successfully",
-            status: "success",
+            status: true,
             data: Object.assign(Object.assign({}, postObj), { timeAgo, pollResults: pollResults || null, userVotedOptionId: userVotedOptionId || null })
         });
     }
     catch (err) {
-        res.status(500).json({ status: "failed", message: "Failed to fetch post", data: { error: err } });
+        res.status(500).json({ status: false, message: "Failed to fetch post", data: { error: err } });
     }
 });
 exports.getPostVotePollById = getPostVotePollById;
@@ -288,7 +288,7 @@ const getAllPosts = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         // Determine if there are more posts
         const hasMore = skip + posts.length < totalPosts;
         res.status(200).json({
-            status: "success",
+            status: true,
             message: "Posts fetched successfully",
             data: {
                 posts: formattedPosts,
@@ -300,7 +300,7 @@ const getAllPosts = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     }
     catch (err) {
         res.status(500).json({
-            status: "failed",
+            status: false,
             message: "Failed to fetch posts",
             data: { error: err }
         });
@@ -311,7 +311,7 @@ const getPostById = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     try {
         const post = yield postModel_1.default.findById(req.params.id).populate("adminId", "_id name photoURL");
         if (!post) {
-            res.status(404).json({ status: "failed", message: "Post not found" });
+            res.status(404).json({ status: false, message: "Post not found" });
             return;
         }
         const postObj = post.toObject();
@@ -319,10 +319,10 @@ const getPostById = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         const { category } = postObj, cleanedPost = __rest(postObj, ["category"]);
         res.status(200).json({
             message: "Post fetched successfully",
-            status: "success",
+            status: true,
             data: {
                 category: (category === null || category === void 0 ? void 0 : category.toLowerCase()) || null,
-                post: Object.assign(Object.assign({}, cleanedPost), { timeAgo: (0, dayjs_1.default)(post.createdAt).fromNow(), adminId: {
+                data: Object.assign(Object.assign({}, cleanedPost), { timeAgo: (0, dayjs_1.default)(post.createdAt).fromNow(), adminId: {
                         _id: admin._id,
                         name: admin.name,
                         photoURL: admin.photoURL,
@@ -331,7 +331,7 @@ const getPostById = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         });
     }
     catch (err) {
-        res.status(500).json({ status: "failed", message: "Failed to fetch post", data: { error: err } });
+        res.status(500).json({ status: false, message: "Failed to fetch post", data: { error: err } });
     }
 });
 exports.getPostById = getPostById;
@@ -362,18 +362,18 @@ const getPostsByCategory = (req, res) => __awaiter(void 0, void 0, void 0, funct
         });
         res.status(200).json({
             message: "Posts fetched successfully",
-            status: "success",
+            status: true,
             data: {
                 category: category.toLowerCase(),
                 currentPage: page,
                 totalPages: Math.ceil(totalPosts / limit),
                 totalPosts,
-                posts: formattedPosts,
+                data: formattedPosts,
             }
         });
     }
     catch (err) {
-        res.status(500).json({ status: "failed", message: "Failed to fetch posts by category", data: { error: err } });
+        res.status(500).json({ status: false, message: "Failed to fetch posts by category", data: { error: err } });
     }
 });
 exports.getPostsByCategory = getPostsByCategory;
@@ -386,7 +386,7 @@ const updatePost = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     try {
         const post = yield postModel_1.default.findOne({ _id: id, adminId });
         if (!post) {
-            res.status(404).json({ status: "failed", message: "Post not found or unauthorized" });
+            res.status(404).json({ status: false, message: "Post not found or unauthorized" });
             return;
         }
         let images = post.images || [];
@@ -463,10 +463,10 @@ const updatePost = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         const { category: _omitCategory } = postObj, cleanedPost = __rest(postObj, ["category"]);
         res.status(200).json({
             message: "Post updated successfully",
-            status: "success",
+            status: true,
             data: {
                 category: post.category.toLowerCase(),
-                post: Object.assign(Object.assign({}, cleanedPost), { timeAgo: (0, dayjs_1.default)(post.createdAt).fromNow(), adminId: {
+                data: Object.assign(Object.assign({}, cleanedPost), { timeAgo: (0, dayjs_1.default)(post.createdAt).fromNow(), adminId: {
                         _id: admin._id,
                         name: admin.name,
                         photoURL: admin.photoURL,
@@ -476,7 +476,7 @@ const updatePost = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     }
     catch (err) {
         console.error("Update Post Error:", err);
-        res.status(500).json({ status: "failed", message: "Failed to update post", data: { error: err } });
+        res.status(500).json({ status: false, message: "Failed to update post", data: { error: err } });
     }
 });
 exports.updatePost = updatePost;
@@ -487,14 +487,14 @@ const deletePost = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     try {
         const post = yield postModel_1.default.findOne({ _id: id, adminId });
         if (!post) {
-            res.status(404).json({ status: "failed", message: "Post not found" });
+            res.status(404).json({ status: false, message: "Post not found" });
             return;
         }
         yield postModel_1.default.findByIdAndDelete(id);
-        res.status(200).json({ status: "success", message: "Post deleted successfully" });
+        res.status(200).json({ status: true, message: "Post deleted successfully" });
     }
     catch (err) {
-        res.status(500).json({ status: "failed", message: "Delete failed", data: { error: err } });
+        res.status(500).json({ status: false, message: "Delete failed", data: { error: err } });
     }
 });
 exports.deletePost = deletePost;
@@ -507,7 +507,7 @@ const toggleLikePost = (req, res) => __awaiter(void 0, void 0, void 0, function*
     try {
         const post = yield postModel_1.default.findById(postId);
         if (!post) {
-            res.status(404).json({ status: "failed", message: "Post not found" });
+            res.status(404).json({ status: false, message: "Post not found" });
             return;
         }
         const isLiked = (_b = post.likes) === null || _b === void 0 ? void 0 : _b.some((id) => id.equals(objectUserId));
@@ -531,14 +531,14 @@ const toggleLikePost = (req, res) => __awaiter(void 0, void 0, void 0, function*
         yield post.save();
         res.status(200).json({
             message: isLiked ? "Post unliked" : "Post liked",
-            status: "success",
+            status: true,
             data: {
                 likesCount: post.likes.length,
             }
         });
     }
     catch (err) {
-        res.status(500).json({ status: "failed", message: "Failed to toggle like", data: { error: err } });
+        res.status(500).json({ status: false, message: "Failed to toggle like", data: { error: err } });
     }
 });
 exports.toggleLikePost = toggleLikePost;
@@ -548,14 +548,14 @@ const toggleSavePost = (req, res) => __awaiter(void 0, void 0, void 0, function*
     const { postId } = req.params;
     const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a._id;
     if (!userId) {
-        res.status(400).json({ status: "failed", message: "User ID is required" });
+        res.status(400).json({ status: false, message: "User ID is required" });
         return;
     }
     const objectUserId = new mongoose_1.default.Types.ObjectId(userId);
     try {
         const post = yield postModel_1.default.findById(postId);
         if (!post) {
-            res.status(404).json({ status: "failed", message: "Post not found" });
+            res.status(404).json({ status: false, message: "Post not found" });
             return;
         }
         const isSaved = (_b = post.savedBy) === null || _b === void 0 ? void 0 : _b.some((id) => id.equals(objectUserId));
@@ -579,12 +579,12 @@ const toggleSavePost = (req, res) => __awaiter(void 0, void 0, void 0, function*
         yield post.save();
         res.status(200).json({
             message: isSaved ? "Post unsaved" : "Post saved",
-            status: "success",
+            status: true,
             data: post.savedBy.length,
         });
     }
     catch (err) {
-        res.status(500).json({ status: "failed", message: "Failed to toggle save", data: { error: err } });
+        res.status(500).json({ status: false, message: "Failed to toggle save", data: { error: err } });
     }
 });
 exports.toggleSavePost = toggleSavePost;
@@ -596,10 +596,10 @@ const getSavedPosts = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         const posts = yield postModel_1.default.find({ savedBy: userId })
             .sort({ createdAt: -1 })
             .populate("adminId", "name photoURL");
-        res.status(200).json({ status: "success", message: "Fetched Post Successfully", data: posts });
+        res.status(200).json({ status: true, message: "Fetched Post Successfully", data: posts });
     }
     catch (err) {
-        res.status(500).json({ status: "failed", message: "Failed to fetch saved posts", data: { error: err } });
+        res.status(500).json({ status: false, message: "Failed to fetch saved posts", data: { error: err } });
     }
 });
 exports.getSavedPosts = getSavedPosts;
@@ -609,13 +609,13 @@ const sharePost = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { postId } = req.params;
     const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a._id;
     if (!userId) {
-        res.status(400).json({ status: "failed", message: "User ID is required" });
+        res.status(400).json({ status: false, message: "User ID is required" });
         return;
     }
     try {
         const post = yield postModel_1.default.findById(postId);
         if (!post) {
-            res.status(404).json({ status: "failed", message: "Post not found" });
+            res.status(404).json({ status: false, message: "Post not found" });
             return;
         }
         const alreadyShared = (_b = post.sharedBy) === null || _b === void 0 ? void 0 : _b.some((id) => id.toString() === userId.toString());
@@ -627,7 +627,7 @@ const sharePost = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         const shareUrl = `${process.env.FRONTEND_URL}/post/${post._id}`;
         res.status(200).json({
             message: "Post share tracked successfully",
-            status: "success",
+            status: true,
             data: {
                 shareUrl,
                 shareCount: post.shareCount,
@@ -636,7 +636,7 @@ const sharePost = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     }
     catch (err) {
         console.error("Share Post Error:", err);
-        res.status(500).json({ status: "failed", message: "Failed to share post", data: { error: err } });
+        res.status(500).json({ status: false, message: "Failed to share post", data: { error: err } });
     }
 });
 exports.sharePost = sharePost;
@@ -646,14 +646,14 @@ const trackPostView = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     const { postId } = req.params;
     const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a._id;
     if (!userId) {
-        res.status(401).json({ status: "failed", message: "User not authenticated" });
+        res.status(401).json({ status: false, message: "User not authenticated" });
         return;
     }
     const objectUserId = new mongoose_1.default.Types.ObjectId(userId);
     try {
         const post = yield postModel_1.default.findById(postId);
         if (!post) {
-            res.status(404).json({ status: "failed", message: "Post not found" });
+            res.status(404).json({ status: false, message: "Post not found" });
             return;
         }
         const alreadyViewed = post.views.some((view) => view.userId.toString() === objectUserId.toString());
@@ -664,10 +664,10 @@ const trackPostView = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         }
         //Populate userId for analytics
         yield post.populate("views.userId", "name email photoURL");
-        res.status(200).json({ status: "success", message: "Post view tracked" });
+        res.status(200).json({ status: true, message: "Post view tracked" });
     }
     catch (err) {
-        res.status(500).json({ status: "failed", message: "Failed to track post view", data: { error: err } });
+        res.status(500).json({ status: false, message: "Failed to track post view", data: { error: err } });
     }
 });
 exports.trackPostView = trackPostView;
@@ -677,7 +677,7 @@ const getPostAnalytics = (req, res) => __awaiter(void 0, void 0, void 0, functio
     const { postId } = req.params;
     const adminId = (_a = req.user) === null || _a === void 0 ? void 0 : _a._id;
     if (!adminId) {
-        res.status(400).json({ status: "failed", message: "Admin ID is required" });
+        res.status(400).json({ status: false, message: "Admin ID is required" });
         return;
     }
     try {
@@ -687,11 +687,11 @@ const getPostAnalytics = (req, res) => __awaiter(void 0, void 0, void 0, functio
             .populate("savedBy", "name email photoURL")
             .populate("sharedBy", "name email photoURL");
         if (!post) {
-            res.status(404).json({ status: "failed", message: "Post not found" });
+            res.status(404).json({ status: false, message: "Post not found" });
             return;
         }
         if (post.adminId.toString() !== adminId.toString()) {
-            res.status(403).json({ status: "failed", message: "Access denied. Only the post owner can view analytics." });
+            res.status(403).json({ status: false, message: "Access denied. Only the post owner can view analytics." });
             return;
         }
         // Format viewDetails
@@ -737,7 +737,7 @@ const getPostAnalytics = (req, res) => __awaiter(void 0, void 0, void 0, functio
         });
         res.status(200).json({
             message: "Post analytics fetched successfully",
-            status: "success",
+            status: true,
             data: {
                 postId: post._id,
                 likes: post.likes.length,
@@ -752,7 +752,7 @@ const getPostAnalytics = (req, res) => __awaiter(void 0, void 0, void 0, functio
         });
     }
     catch (err) {
-        res.status(500).json({ status: "failed", message: "Failed to fetch analytics", data: { error: err } });
+        res.status(500).json({ status: false, message: "Failed to fetch analytics", data: { error: err } });
     }
 });
 exports.getPostAnalytics = getPostAnalytics;
