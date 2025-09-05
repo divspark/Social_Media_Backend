@@ -289,6 +289,7 @@ const getAllPosts = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         const hasMore = skip + posts.length < totalPosts;
         res.status(200).json({
             status: "success",
+            message: "Posts fetched successfully",
             data: {
                 posts: formattedPosts,
                 page,

@@ -49,15 +49,19 @@ export const getAllDailyMessages = async (_req: Request, res: Response) => {
       return;
     }
 
-    res.status(200).json(
-      messages.map(msg => ({
-        _id: msg._id,
-        content: msg.content,
-        postedBy: msg.adminId,
-        date: dayjs(msg.createdAt).format("MMMM D, YYYY"),
-        timeAgo: dayjs(msg.createdAt).fromNow(),
-      }))
-    );
+    res.status(200).json({
+      message: "Daily messages fetched",
+      status: "success",
+      data: {
+        messages: messages.map(msg => ({
+          _id: msg._id,
+          content: msg.content,
+          postedBy: msg.adminId,
+          date: dayjs(msg.createdAt).format("MMMM D, YYYY"),
+          timeAgo: dayjs(msg.createdAt).fromNow(),
+        }))
+      }
+    });
   } catch (err) {
     res.status(500).json({ status: "failed", message: "Failed to fetch daily messages", data: { error: err }   });
   }
@@ -87,7 +91,7 @@ export const getDailyMessageById = async (req: Request, res: Response) => {
       timeAgo: dayjs(message.createdAt).fromNow(),
    }});
   } catch (error) {
-    res.status(500).json({ status: "failed",message: "Failed to fetch daily message by ID", error   });
+    res.status(500).json({ status: "failed",message: "Failed to fetch daily message by ID", data:{error:error   }});
   }
 };
 
@@ -122,7 +126,7 @@ export const updateDailyMessage = async (req: AuthRequest, res: Response) => {
       },
    }});
   } catch (error) {
-    res.status(500).json({ status: "failed", message: "Update failed", error   });
+    res.status(500).json({ status: "failed", message: "Update failed", data:{error:error   }   });
   }
 };
 
@@ -145,6 +149,6 @@ export const deleteDailyMessage = async (req: AuthRequest, res: Response) => {
 
     res.status(200).json({ status: "success",  message: "Message deleted successfully"  });
   } catch (error) {
-    res.status(500).json({ status: "failed", message: "Delete failed", error   });
+    res.status(500).json({ status: "failed", message: "Delete failed", data:{error:error   }   });
   }
 };

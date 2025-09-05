@@ -63,7 +63,7 @@ const addComment = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     }
     catch (error) {
         console.error("Add Comment Error:", error);
-        res.status(500).json({ status: "failed", message: "Failed to add comment", error });
+        res.status(500).json({ status: "failed", message: "Failed to add comment", data: { error: error } });
     }
 });
 exports.addComment = addComment;
@@ -115,7 +115,7 @@ const replyToComment = (req, res) => __awaiter(void 0, void 0, void 0, function*
     }
     catch (error) {
         console.error("Reply Error:", error);
-        res.status(500).json({ status: "failed", message: "Failed to reply to comment", error });
+        res.status(500).json({ status: "failed", message: "Failed to reply to comment", data: { error: error } });
     }
 });
 exports.replyToComment = replyToComment;
@@ -145,7 +145,7 @@ const deleteComment = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     }
     catch (error) {
         console.error("Delete Comment Error:", error);
-        res.status(500).json({ status: "failed", message: "Failed to delete comment", error });
+        res.status(500).json({ status: "failed", message: "Failed to delete comment", data: { error: error } });
     }
 });
 exports.deleteComment = deleteComment;
@@ -182,7 +182,7 @@ const getCommentsByPost = (req, res) => __awaiter(void 0, void 0, void 0, functi
     }
     catch (error) {
         console.error("Get Comments Error:", error);
-        res.status(500).json({ status: "failed", message: "Failed to fetch comments", error });
+        res.status(500).json({ status: "failed", message: "Failed to fetch comments", data: { error: error } });
     }
 });
 exports.getCommentsByPost = getCommentsByPost;
@@ -231,7 +231,7 @@ const toggleLikeComment = (req, res) => __awaiter(void 0, void 0, void 0, functi
     }
     catch (error) {
         console.error("Toggle Like Error:", error);
-        res.status(500).json({ status: "failed", message: "Failed to like/unlike comment", error });
+        res.status(500).json({ status: "failed", message: "Failed to like/unlike comment", data: { error: error } });
     }
 });
 exports.toggleLikeComment = toggleLikeComment;

@@ -52,7 +52,7 @@ export const getNotifications = (req: AuthRequest, res: Response): Promise<void>
     })
     .catch(error => {
       console.error("Failed to fetch notifications:", error);
-      res.status(500).json({ status: "failed",  message: "Failed to fetch notifications", error   });
+      res.status(500).json({ status: "failed",  message: "Failed to fetch notifications", data:{error:error   }   });
     });
 };
 
@@ -75,7 +75,7 @@ export const markAsRead = (req: AuthRequest, res: Response): Promise<void> => {
     })
     .catch(error => {
       console.error("Failed to mark as read:", error);
-      res.status(500).json({ status: "failed",  message: "Failed to mark as read", error   });
+      res.status(500).json({ status: "failed",  message: "Failed to mark as read", data:{error:error   }   });
     });
 };
 

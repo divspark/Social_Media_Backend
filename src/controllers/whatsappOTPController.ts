@@ -31,7 +31,8 @@ export async function sendOtp(req: Request, res: Response): Promise<void> {
     .then((canSend) => {
       if (!canSend) {
         res.status(429).json({
-          error: "OTP already sent. Please wait before requesting again."
+          status: "failed",
+          message: "OTP already sent. Please wait before requesting again."
         });
         return Promise.reject("rate_limit");
       }
@@ -63,7 +64,7 @@ export async function sendOtp(req: Request, res: Response): Promise<void> {
           (err && typeof err === "object" && "error" in err && err.error) ||
           (typeof err === "string" && err) ||
           "Internal error";
-        res.status(500).json({ status: "failed", data: { error: msg }   });
+        res.status(500).json({ status: "failed",message:"Rate limiy reached! Try after some time", data: { error: msg }   });
       }
     });
 }

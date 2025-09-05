@@ -55,13 +55,19 @@ const getAllDailyMessages = (_req, res) => __awaiter(void 0, void 0, void 0, fun
             res.status(404).json({ status: "failed", message: "No daily messages found" });
             return;
         }
-        res.status(200).json(messages.map(msg => ({
-            _id: msg._id,
-            content: msg.content,
-            postedBy: msg.adminId,
-            date: (0, dayjs_1.default)(msg.createdAt).format("MMMM D, YYYY"),
-            timeAgo: (0, dayjs_1.default)(msg.createdAt).fromNow(),
-        })));
+        res.status(200).json({
+            message: "Daily messages fetched",
+            status: "success",
+            data: {
+                messages: messages.map(msg => ({
+                    _id: msg._id,
+                    content: msg.content,
+                    postedBy: msg.adminId,
+                    date: (0, dayjs_1.default)(msg.createdAt).format("MMMM D, YYYY"),
+                    timeAgo: (0, dayjs_1.default)(msg.createdAt).fromNow(),
+                }))
+            }
+        });
     }
     catch (err) {
         res.status(500).json({ status: "failed", message: "Failed to fetch daily messages", data: { error: err } });
@@ -90,7 +96,7 @@ const getDailyMessageById = (req, res) => __awaiter(void 0, void 0, void 0, func
         });
     }
     catch (error) {
-        res.status(500).json({ status: "failed", message: "Failed to fetch daily message by ID", error });
+        res.status(500).json({ status: "failed", message: "Failed to fetch daily message by ID", data: { error: error } });
     }
 });
 exports.getDailyMessageById = getDailyMessageById;
@@ -124,7 +130,7 @@ const updateDailyMessage = (req, res) => __awaiter(void 0, void 0, void 0, funct
         });
     }
     catch (error) {
-        res.status(500).json({ status: "failed", message: "Update failed", error });
+        res.status(500).json({ status: "failed", message: "Update failed", data: { error: error } });
     }
 });
 exports.updateDailyMessage = updateDailyMessage;
@@ -145,7 +151,7 @@ const deleteDailyMessage = (req, res) => __awaiter(void 0, void 0, void 0, funct
         res.status(200).json({ status: "success", message: "Message deleted successfully" });
     }
     catch (error) {
-        res.status(500).json({ status: "failed", message: "Delete failed", error });
+        res.status(500).json({ status: "failed", message: "Delete failed", data: { error: error } });
     }
 });
 exports.deleteDailyMessage = deleteDailyMessage;

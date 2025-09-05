@@ -339,6 +339,7 @@ export const getAllPosts = async (req: AuthRequest, res: Response): Promise<void
 
     res.status(200).json({ 
       status: "success",  
+      message: "Posts fetched successfully",
       data: {
         posts: formattedPosts,
         page,

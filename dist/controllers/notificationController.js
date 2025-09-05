@@ -50,7 +50,7 @@ const getNotifications = (req, res) => {
     })
         .catch(error => {
         console.error("Failed to fetch notifications:", error);
-        res.status(500).json({ status: "failed", message: "Failed to fetch notifications", error });
+        res.status(500).json({ status: "failed", message: "Failed to fetch notifications", data: { error: error } });
     });
 };
 exports.getNotifications = getNotifications;
@@ -72,7 +72,7 @@ const markAsRead = (req, res) => {
     })
         .catch(error => {
         console.error("Failed to mark as read:", error);
-        res.status(500).json({ status: "failed", message: "Failed to mark as read", error });
+        res.status(500).json({ status: "failed", message: "Failed to mark as read", data: { error: error } });
     });
 };
 exports.markAsRead = markAsRead;

@@ -64,7 +64,7 @@ export const addComment = async (req: AuthRequest, res: Response): Promise<void>
    }});
   } catch (error) {
     console.error("Add Comment Error:", error);
-    res.status(500).json({ status: "failed",  message: "Failed to add comment", error   });
+    res.status(500).json({ status: "failed",  message: "Failed to add comment",data:{ error:error}   });
   }
 };
 
@@ -121,7 +121,7 @@ export const replyToComment = async (req: AuthRequest, res: Response): Promise<v
     }});
   } catch (error) {
     console.error("Reply Error:", error);
-    res.status(500).json({ status: "failed",  message: "Failed to reply to comment", error   });
+    res.status(500).json({ status: "failed",  message: "Failed to reply to comment", data:{ error:error}   });
   }
 };
 
@@ -153,7 +153,7 @@ export const deleteComment = async (req: AuthRequest, res: Response): Promise<vo
     }
   } catch (error) {
     console.error("Delete Comment Error:", error);
-    res.status(500).json({ status: "failed", message: "Failed to delete comment", error   });
+    res.status(500).json({ status: "failed", message: "Failed to delete comment", data:{ error:error}   });
   }
 };
 
@@ -199,7 +199,7 @@ export const getCommentsByPost = async (req: Request, res: Response): Promise<vo
    }});
   } catch (error) {
     console.error("Get Comments Error:", error);
-    res.status(500).json({ status: "failed", message: "Failed to fetch comments", error   });
+    res.status(500).json({ status: "failed", message: "Failed to fetch comments", data:{ error:error}   });
   }
 };
 
@@ -261,6 +261,6 @@ export const toggleLikeComment = async (req: Request, res: Response): Promise<vo
    }});
   } catch (error) {
     console.error("Toggle Like Error:", error);
-    res.status(500).json({ status: "failed", message: "Failed to like/unlike comment", error   });
+    res.status(500).json({ status: "failed", message: "Failed to like/unlike comment", data:{ error:error}   });
   }
 };
