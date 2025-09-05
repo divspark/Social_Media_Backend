@@ -57,6 +57,7 @@ function sendOtp(req, res) {
                 .then(() => whatsappOtpModel_1.OTPModel.create({ phoneNumber: mobile, otp, expiresAt }))
                 .then(() => res.status(200).json({
                 message: "OTP sent successfully",
+                status: "success",
                 data: { expiresIn: 60 }
             }));
         })

@@ -33,6 +33,9 @@ const notificationModel_1 = __importDefault(require("../models/notificationModel
 const userModel_1 = __importDefault(require("../models/userModel"));
 const relativeTime_1 = __importDefault(require("dayjs/plugin/relativeTime"));
 dayjs_1.default.extend(relativeTime_1.default);
+// Define default constants
+const DEFAULT_PAGE = 1;
+const DEFAULT_LIMIT = 10;
 const createPost = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
     const { content, postType, pollOptions, category } = req.body;
@@ -258,11 +261,21 @@ const getPostVotePollById = (req, res) => __awaiter(void 0, void 0, void 0, func
     }
 });
 exports.getPostVotePollById = getPostVotePollById;
-const getAllPosts = (_req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const getAllPosts = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
+        // Get page and limit from query params or use defaults
+        const page = parseInt(req.query.page) || DEFAULT_PAGE;
+        const limit = parseInt(req.query.limit) || DEFAULT_LIMIT;
+        const skip = (page - 1) * limit;
+        // Fetch total count of posts
+        const totalPosts = yield postModel_1.default.countDocuments();
+        // Fetch posts with pagination
         const posts = yield postModel_1.default.find()
             .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit)
             .populate("adminId", "_id name photoURL");
+        // Format posts
         const formattedPosts = posts.map((post) => {
             const postObj = post.toObject();
             const admin = postObj.adminId;
@@ -272,10 +285,24 @@ const getAllPosts = (_req, res) => __awaiter(void 0, void 0, void 0, function* (
                     photoURL: admin.photoURL,
                 }, videoThumbnail: postObj.videoThumbnail || null });
         });
-        res.status(200).json({ status: "success", data: { posts: formattedPosts } });
+        // Determine if there are more posts
+        const hasMore = skip + posts.length < totalPosts;
+        res.status(200).json({
+            status: "success",
+            data: {
+                posts: formattedPosts,
+                page,
+                limit,
+                hasMore
+            }
+        });
     }
     catch (err) {
-        res.status(500).json({ status: "failed", message: "Failed to fetch posts", data: { error: err } });
+        res.status(500).json({
+            status: "failed",
+            message: "Failed to fetch posts",
+            data: { error: err }
+        });
     }
 });
 exports.getAllPosts = getAllPosts;

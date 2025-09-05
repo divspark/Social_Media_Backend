@@ -12,6 +12,10 @@ import { messaging } from "firebase-admin";
 
 dayjs.extend(relativeTime);
 
+// Define default constants
+const DEFAULT_PAGE = 1;
+const DEFAULT_LIMIT = 10;
+
 interface AuthRequest extends Request {
   user?: IUser;
 }
@@ -291,12 +295,24 @@ export const getPostVotePollById = async (req: AuthRequest, res: Response) => {
   }
 };
 
-export const getAllPosts = async (_req: AuthRequest, res: Response): Promise<void> => {
+export const getAllPosts = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
+    // Get page and limit from query params or use defaults
+    const page = parseInt(req.query.page as string) || DEFAULT_PAGE;
+    const limit = parseInt(req.query.limit as string) || DEFAULT_LIMIT;
+    const skip = (page - 1) * limit;
+
+    // Fetch total count of posts
+    const totalPosts = await Post.countDocuments();
+
+    // Fetch posts with pagination
     const posts = await Post.find()
       .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
       .populate("adminId", "_id name photoURL");
 
+    // Format posts
     const formattedPosts = posts.map((post) => {
       const postObj = post.toObject();
 
@@ -318,9 +334,24 @@ export const getAllPosts = async (_req: AuthRequest, res: Response): Promise<voi
       };
     });
 
-    res.status(200).json({ status: "success",  data:{posts: formattedPosts } });
+    // Determine if there are more posts
+    const hasMore = skip + posts.length < totalPosts;
+
+    res.status(200).json({ 
+      status: "success",  
+      data: {
+        posts: formattedPosts,
+        page,
+        limit,
+        hasMore
+      } 
+    });
   } catch (err) {
-    res.status(500).json({ status: "failed",  message: "Failed to fetch posts", data: { error: err }   });
+    res.status(500).json({ 
+      status: "failed",  
+      message: "Failed to fetch posts", 
+      data: { error: err } 
+    });
   }
 };
 

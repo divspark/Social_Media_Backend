@@ -50,6 +50,7 @@ export async function sendOtp(req: Request, res: Response): Promise<void> {
         .then(() =>
           res.status(200).json({
             message: "OTP sent successfully",
+            status: "success",
             data:{expiresIn: 60}
           })
         );
