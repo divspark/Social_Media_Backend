@@ -337,13 +337,16 @@ const getPostById = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
 exports.getPostById = getPostById;
 const getPostsByCategory = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { category } = req.params;
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
+    // Get page and limit from query params or use defaults
+    const page = parseInt(req.query.page) || DEFAULT_PAGE;
+    const limit = parseInt(req.query.limit) || DEFAULT_LIMIT;
     const skip = (page - 1) * limit;
     try {
+        // Count total posts for the category
         const totalPosts = yield postModel_1.default.countDocuments({
             category: { $regex: new RegExp("^" + category + "$", "i") }
         });
+        // Fetch paginated posts
         const posts = yield postModel_1.default.find({
             category: { $regex: new RegExp("^" + category + "$", "i") }
         })
@@ -351,6 +354,7 @@ const getPostsByCategory = (req, res) => __awaiter(void 0, void 0, void 0, funct
             .skip(skip)
             .limit(limit)
             .populate("adminId", "_id name photoURL");
+        // Format posts
         const formattedPosts = posts.map(post => {
             const postObj = post.toObject();
             const admin = postObj.adminId;
@@ -360,20 +364,26 @@ const getPostsByCategory = (req, res) => __awaiter(void 0, void 0, void 0, funct
                     photoURL: admin.photoURL,
                 }, videoThumbnail: postObj.videoThumbnail || null });
         });
+        // Determine if there are more posts
+        const hasMore = skip + posts.length < totalPosts;
         res.status(200).json({
             message: "Posts fetched successfully",
             status: true,
             data: {
                 category: category.toLowerCase(),
-                currentPage: page,
-                totalPages: Math.ceil(totalPosts / limit),
-                totalPosts,
+                page,
+                limit,
+                hasMore,
                 data: formattedPosts,
             }
         });
     }
     catch (err) {
-        res.status(500).json({ status: false, message: "Failed to fetch posts by category", data: { error: err } });
+        res.status(500).json({
+            status: false,
+            message: "Failed to fetch posts by category",
+            data: { error: err }
+        });
     }
 });
 exports.getPostsByCategory = getPostsByCategory;
