@@ -291,7 +291,7 @@ const getAllPosts = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
             status: true,
             message: "Posts fetched successfully",
             data: {
-                posts: formattedPosts,
+                data: formattedPosts,
                 page,
                 limit,
                 hasMore
