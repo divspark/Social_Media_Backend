@@ -132,7 +132,7 @@ const getOwnProfile = (req, res) => __awaiter(void 0, void 0, void 0, function* 
             res.status(404).json({ status: false, message: "User not found" });
             return;
         }
-        res.status(200).json({ status: true, message: "Profile Fetched Successfully", data: { user } });
+        res.status(200).json({ status: true, message: "Profile Fetched Successfully", data: user.toObject(), });
     }
     catch (err) {
         res.status(500).json({ status: false, message: "Failed to fetch profile", data: { error: err } });
@@ -151,7 +151,7 @@ const updateOwnProfile = (req, res) => __awaiter(void 0, void 0, void 0, functio
         }
         const updateFields = Object.assign(Object.assign(Object.assign(Object.assign({}, (name && { name })), (email && { email })), (address && { address })), (photoURL && { photoURL }));
         const updatedUser = yield userModel_1.default.findByIdAndUpdate(userId, updateFields, { new: true });
-        res.status(200).json({ status: true, message: "Profile updated", data: { data: updatedUser } });
+        res.status(200).json({ status: true, message: "Profile updated", data: updatedUser === null || updatedUser === void 0 ? void 0 : updatedUser.toObject(), });
     }
     catch (err) {
         res.status(500).json({ status: false, message: "Update failed", data: { error: err } });
@@ -166,7 +166,7 @@ const getUserProfileByUID = (req, res) => __awaiter(void 0, void 0, void 0, func
             res.status(404).json({ status: false, message: "User not found" });
             return;
         }
-        res.status(200).json({ status: true, message: "User fetched successfully", data: { user } });
+        res.status(200).json({ status: true, message: "User fetched successfully", data: user.toObject(), });
     }
     catch (err) {
         res.status(500).json({ status: false, message: "Failed to fetch user", data: { error: err } });
@@ -213,9 +213,7 @@ const blockOrUnblockUser = (req, res) => __awaiter(void 0, void 0, void 0, funct
                 ? `User blocked ${durationInDays ? `for ${durationInDays} day(s)` : "permanently"}`
                 : "User unblocked",
             status: true,
-            data: {
-                user,
-            }
+            data: user.toObject(),
         });
     }
     catch (err) {
@@ -251,7 +249,7 @@ const setUserRestrictions = (req, res) => __awaiter(void 0, void 0, void 0, func
     }
     try {
         const updatedUser = yield userModel_1.default.findByIdAndUpdate(userId, { restrictions }, { new: true }).select("-restrictions"); // remove from response if you want
-        res.status(200).json({ status: true, message: "User restrictions updated", data: { data: updatedUser } });
+        res.status(200).json({ status: true, message: "User restrictions updated", data: updatedUser, });
     }
     catch (err) {
         res.status(500).json({ status: false, message: "Failed to update restrictions", data: { error: err } });
@@ -270,7 +268,7 @@ const getRestrictedUsers = (_req, res) => __awaiter(void 0, void 0, void 0, func
                 { "restrictions.profileUpdate": true },
             ],
         }).select("name email role restrictions");
-        res.status(200).json({ status: true, message: "Restricted Users fetched successfully", data: { data: users } });
+        res.status(200).json({ status: true, message: "Restricted Users fetched successfully", data: users, });
     }
     catch (err) {
         res.status(500).json({ status: false, message: "Failed to fetch restricted users", data: { error: err } });

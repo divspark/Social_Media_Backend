@@ -148,7 +148,7 @@ export const getOwnProfile = async (req: AuthRequest, res: Response): Promise<vo
       return;
     }
 
-    res.status(200).json({ status: true,message:"Profile Fetched Successfully", data:{ user  }});
+    res.status(200).json({ status: true,message:"Profile Fetched Successfully", data: user.toObject(),});
   } catch (err) {
     res.status(500).json({ status: false,  message: "Failed to fetch profile", data: { error: err }   });
   }
@@ -175,7 +175,7 @@ export const updateOwnProfile = async (req: AuthRequest, res: Response): Promise
 
     const updatedUser = await User.findByIdAndUpdate(userId, updateFields, { new: true });
 
-    res.status(200).json({ status: true,  message: "Profile updated", data:{data: updatedUser  }});
+    res.status(200).json({ status: true,  message: "Profile updated", data: updatedUser?.toObject(),});
   } catch (err) {
     res.status(500).json({ status: false,  message: "Update failed", data: { error: err }   });
   }
@@ -191,7 +191,7 @@ export const getUserProfileByUID = async (req: AuthRequest, res: Response): Prom
       return;
     }
 
-    res.status(200).json({ status: true,message:"User fetched successfully", data:{ user } });
+    res.status(200).json({ status: true,message:"User fetched successfully", data: user.toObject(), });
   } catch (err) {
     res.status(500).json({ status: false,  message: "Failed to fetch user", data: { error: err }   });
   }
@@ -246,9 +246,8 @@ export const blockOrUnblockUser = async (req: AuthRequest, res: Response): Promi
         ? `User blocked ${durationInDays ? `for ${durationInDays} day(s)` : "permanently"}`
         : "User unblocked",
         status: true,
-      data:{
-      user,
-    }});
+      data: user.toObject(),
+    });
   } catch (err) {
     res.status(500).json({ status: false,  message: "Failed to update user block status", data: { error: err }   });
   }
@@ -293,7 +292,7 @@ export const setUserRestrictions = async (req: AuthRequest, res: Response): Prom
       { new: true }
     ).select("-restrictions"); // remove from response if you want
 
-    res.status(200).json({ status: true,  message: "User restrictions updated",data:{ data: updatedUser  }});
+    res.status(200).json({ status: true,  message: "User restrictions updated",data: updatedUser,});
   } catch (err) {
     res.status(500).json({ status: false,  message: "Failed to update restrictions", data: { error: err }   });
   }
@@ -312,7 +311,7 @@ export const getRestrictedUsers = async (_req: Request, res: Response): Promise<
       ],
     }).select("name email role restrictions");
 
-    res.status(200).json({ status: true,message:"Restricted Users fetched successfully",  data:{data: users } });
+    res.status(200).json({ status: true,message:"Restricted Users fetched successfully",  data: users, });
   } catch (err) {
     res.status(500).json({ status: false,  message: "Failed to fetch restricted users", data: { error: err }   });
   }
