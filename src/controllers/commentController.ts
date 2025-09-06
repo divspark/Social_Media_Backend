@@ -117,7 +117,7 @@ export const replyToComment = async (req: AuthRequest, res: Response): Promise<v
       message: "Reply added successfully",
       status: true,
       data:{
-      comment: updated,
+      data: updated,
     }});
   } catch (error) {
     console.error("Reply Error:", error);
@@ -257,7 +257,7 @@ export const toggleLikeComment = async (req: Request, res: Response): Promise<vo
       message: alreadyLiked ? "Comment unliked" : "Comment liked",
       status: true,
       data:{
-      likesCount: comment.likes.length,
+      data: comment.likes.length,
    }});
   } catch (error) {
     console.error("Toggle Like Error:", error);

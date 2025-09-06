@@ -109,7 +109,7 @@ const replyToComment = (req, res) => __awaiter(void 0, void 0, void 0, function*
             message: "Reply added successfully",
             status: true,
             data: {
-                comment: updated,
+                data: updated,
             }
         });
     }
@@ -225,7 +225,7 @@ const toggleLikeComment = (req, res) => __awaiter(void 0, void 0, void 0, functi
             message: alreadyLiked ? "Comment unliked" : "Comment liked",
             status: true,
             data: {
-                likesCount: comment.likes.length,
+                data: comment.likes.length,
             }
         });
     }

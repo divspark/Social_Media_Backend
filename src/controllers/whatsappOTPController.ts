@@ -13,7 +13,7 @@ const JWT_SECRET = process.env.JWT_SECRET;
 export async function sendOtp(req: Request, res: Response): Promise<void> {
   const { mobile } = req.body;
   if (!mobile) {
-    res.status(400).json({ status: false, error: "Missing required fields"   });
+    res.status(400).json({ status: false, message: "Missing required fields"   });
     return;
   }
 

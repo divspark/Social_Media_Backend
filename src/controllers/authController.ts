@@ -132,7 +132,7 @@ export const completeProfile = async (req: AuthRequest, res: Response): Promise<
       { new: true }
     );
 
-    res.status(200).json({ status: true,  message: "Profile completed",data:{ user: updatedUser } });
+    res.status(200).json({ status: true,  message: "Profile completed",data:{ data: updatedUser } });
   } catch (err) {
     res.status(500).json({ status: false,  message: "Profile completion failed", data: { error: err }   });
   }
@@ -175,7 +175,7 @@ export const updateOwnProfile = async (req: AuthRequest, res: Response): Promise
 
     const updatedUser = await User.findByIdAndUpdate(userId, updateFields, { new: true });
 
-    res.status(200).json({ status: true,  message: "Profile updated", data:{user: updatedUser  }});
+    res.status(200).json({ status: true,  message: "Profile updated", data:{data: updatedUser  }});
   } catch (err) {
     res.status(500).json({ status: false,  message: "Update failed", data: { error: err }   });
   }
@@ -271,7 +271,7 @@ export const getBlockedUsers = async (_req: Request, res: Response): Promise<voi
       blockedUntil: user.blockedUntil ? user.blockedUntil : "Permanent",
     }));
 
-    res.status(200).json({ status: true,message:"Blocked user fetched successfully", data:{ blockedUsers: formattedUsers } });
+    res.status(200).json({ status: true,message:"Blocked user fetched successfully", data:{ data: formattedUsers } });
   } catch (err) {
     res.status(500).json({ status: false,  message: "Failed to fetch blocked users", data: { error: err }   });
   }
@@ -293,7 +293,7 @@ export const setUserRestrictions = async (req: AuthRequest, res: Response): Prom
       { new: true }
     ).select("-restrictions"); // remove from response if you want
 
-    res.status(200).json({ status: true,  message: "User restrictions updated",data:{ user: updatedUser  }});
+    res.status(200).json({ status: true,  message: "User restrictions updated",data:{ data: updatedUser  }});
   } catch (err) {
     res.status(500).json({ status: false,  message: "Failed to update restrictions", data: { error: err }   });
   }
@@ -351,7 +351,7 @@ export const updateUserRole = async (req: AuthRequest, res: Response): Promise<v
       message: "User role updated successfully",
       status: true,
       data:{
-      user: updatedUser,
+      data: updatedUser,
     }});
   } catch (err) {
     res.status(500).json({ status: false,  message: "Failed to update user role", data: { error: err }   });

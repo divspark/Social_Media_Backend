@@ -116,7 +116,7 @@ const completeProfile = (req, res) => __awaiter(void 0, void 0, void 0, function
         const updatedUser = yield userModel_1.default.findByIdAndUpdate(userId, Object.assign({ name,
             email,
             address, role: "user" }, (photoURL && { photoURL })), { new: true });
-        res.status(200).json({ status: true, message: "Profile completed", data: { user: updatedUser } });
+        res.status(200).json({ status: true, message: "Profile completed", data: { data: updatedUser } });
     }
     catch (err) {
         res.status(500).json({ status: false, message: "Profile completion failed", data: { error: err } });
@@ -151,7 +151,7 @@ const updateOwnProfile = (req, res) => __awaiter(void 0, void 0, void 0, functio
         }
         const updateFields = Object.assign(Object.assign(Object.assign(Object.assign({}, (name && { name })), (email && { email })), (address && { address })), (photoURL && { photoURL }));
         const updatedUser = yield userModel_1.default.findByIdAndUpdate(userId, updateFields, { new: true });
-        res.status(200).json({ status: true, message: "Profile updated", data: { user: updatedUser } });
+        res.status(200).json({ status: true, message: "Profile updated", data: { data: updatedUser } });
     }
     catch (err) {
         res.status(500).json({ status: false, message: "Update failed", data: { error: err } });
@@ -235,7 +235,7 @@ const getBlockedUsers = (_req, res) => __awaiter(void 0, void 0, void 0, functio
             blockReason: user.blockReason,
             blockedUntil: user.blockedUntil ? user.blockedUntil : "Permanent",
         }));
-        res.status(200).json({ status: true, message: "Blocked user fetched successfully", data: { blockedUsers: formattedUsers } });
+        res.status(200).json({ status: true, message: "Blocked user fetched successfully", data: { data: formattedUsers } });
     }
     catch (err) {
         res.status(500).json({ status: false, message: "Failed to fetch blocked users", data: { error: err } });
@@ -251,7 +251,7 @@ const setUserRestrictions = (req, res) => __awaiter(void 0, void 0, void 0, func
     }
     try {
         const updatedUser = yield userModel_1.default.findByIdAndUpdate(userId, { restrictions }, { new: true }).select("-restrictions"); // remove from response if you want
-        res.status(200).json({ status: true, message: "User restrictions updated", data: { user: updatedUser } });
+        res.status(200).json({ status: true, message: "User restrictions updated", data: { data: updatedUser } });
     }
     catch (err) {
         res.status(500).json({ status: false, message: "Failed to update restrictions", data: { error: err } });
@@ -302,7 +302,7 @@ const updateUserRole = (req, res) => __awaiter(void 0, void 0, void 0, function*
             message: "User role updated successfully",
             status: true,
             data: {
-                user: updatedUser,
+                data: updatedUser,
             }
         });
     }

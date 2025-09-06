@@ -28,7 +28,7 @@ function sendOtp(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         const { mobile } = req.body;
         if (!mobile) {
-            res.status(400).json({ status: false, error: "Missing required fields" });
+            res.status(400).json({ status: false, message: "Missing required fields" });
             return;
         }
         let user = yield userModel_1.default.findOne({ phone: mobile });
