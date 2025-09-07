@@ -48,7 +48,7 @@ export const getNotifications = (req: AuthRequest, res: Response): Promise<void>
         });
       });
 
-      res.status(200).json({ status: true,  data:{data: grouped}  });
+      res.status(200).json({ status: true,  data: grouped  });
     })
     .catch(error => {
       console.error("Failed to fetch notifications:", error);
