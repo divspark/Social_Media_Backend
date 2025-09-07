@@ -32,11 +32,11 @@ const addComment = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         return;
     }
     try {
-        const existingComment = yield commentModel_1.default.findOne({ postId, userId });
-        if (existingComment) {
-            res.status(400).json({ status: false, message: "You have already commented on this post." });
-            return;
-        }
+        // const existingComment = await Comment.findOne({ postId, userId });
+        // if (existingComment) {
+        //   res.status(400).json({ status: false,  message: "You have already commented on this post."   });
+        //   return;
+        // }
         const comment = yield commentModel_1.default.create({ postId, userId, content });
         const populated = yield comment.populate("userId", "name photoURL");
         // Notify Post Admin

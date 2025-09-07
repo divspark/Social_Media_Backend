@@ -28,11 +28,11 @@ export const addComment = async (req: AuthRequest, res: Response): Promise<void>
   }
 
   try {
-    const existingComment = await Comment.findOne({ postId, userId });
-    if (existingComment) {
-      res.status(400).json({ status: false,  message: "You have already commented on this post."   });
-      return;
-    }
+    // const existingComment = await Comment.findOne({ postId, userId });
+    // if (existingComment) {
+    //   res.status(400).json({ status: false,  message: "You have already commented on this post."   });
+    //   return;
+    // }
 
     const comment = await Comment.create({ postId, userId, content });
     const populated = await comment.populate("userId", "name photoURL");
