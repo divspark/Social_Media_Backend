@@ -148,7 +148,9 @@ export async function verifyOtpController(req: Request, res: Response): Promise<
         token,
         phone: mobile,
         role: user.role,
+        id: user._id,
         type: "phone",
+        ...(user.name && { name: user.name }),
       },
     });
   } catch (err) {
@@ -156,7 +158,7 @@ export async function verifyOtpController(req: Request, res: Response): Promise<
     res.status(500).json({
       status: false,
       message: "Internal error",
-      data: { data: { error: err } }
+      data: { error: err },
     });
   }
 }

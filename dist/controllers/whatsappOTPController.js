@@ -139,12 +139,7 @@ function verifyOtpController(req, res) {
                 message: isNewUser
                     ? "New phone user created, please complete profile"
                     : "OTP verified successfully",
-                data: {
-                    token,
-                    phone: mobile,
-                    role: user.role,
-                    type: "phone",
-                },
+                data: Object.assign({ token, phone: mobile, role: user.role, id: user._id, type: "phone" }, (user.name && { name: user.name })),
             });
         }
         catch (err) {
@@ -152,7 +147,7 @@ function verifyOtpController(req, res) {
             res.status(500).json({
                 status: false,
                 message: "Internal error",
-                data: { data: { error: err } }
+                data: { error: err },
             });
         }
     });
