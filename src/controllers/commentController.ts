@@ -56,12 +56,10 @@ export const addComment = async (req: AuthRequest, res: Response): Promise<void>
     res.status(201).json({
       message: "Comment added successfully",
       status: true,
-      data:{
       data: {
-        ...populated.toObject(),
-        timeAgo: dayjs(comment.createdAt).fromNow(),
-      },
-   }});
+    ...populated.toObject(),
+    timeAgo: dayjs(comment.createdAt).fromNow(),
+  }});
   } catch (error) {
     console.error("Add Comment Error:", error);
     res.status(500).json({ status: false,  message: "Failed to add comment",data:{ error:error}   });
@@ -116,9 +114,8 @@ export const replyToComment = async (req: AuthRequest, res: Response): Promise<v
     res.status(200).json({
       message: "Reply added successfully",
       status: true,
-      data:{
       data: updated,
-    }});
+    });
   } catch (error) {
     console.error("Reply Error:", error);
     res.status(500).json({ status: false,  message: "Failed to reply to comment", data:{ error:error}   });
@@ -253,12 +250,12 @@ export const toggleLikeComment = async (req: Request, res: Response): Promise<vo
 
     await comment.save();
 
-    res.status(200).json({
+   res.status(200).json({
       message: alreadyLiked ? "Comment unliked" : "Comment liked",
       status: true,
-      data:{
       data: comment.likes.length,
-   }});
+    });
+
   } catch (error) {
     console.error("Toggle Like Error:", error);
     res.status(500).json({ status: false, message: "Failed to like/unlike comment", data:{ error:error}   });

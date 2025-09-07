@@ -56,9 +56,7 @@ const addComment = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         res.status(201).json({
             message: "Comment added successfully",
             status: true,
-            data: {
-                data: Object.assign(Object.assign({}, populated.toObject()), { timeAgo: (0, dayjs_1.default)(comment.createdAt).fromNow() }),
-            }
+            data: Object.assign(Object.assign({}, populated.toObject()), { timeAgo: (0, dayjs_1.default)(comment.createdAt).fromNow() })
         });
     }
     catch (error) {
@@ -108,9 +106,7 @@ const replyToComment = (req, res) => __awaiter(void 0, void 0, void 0, function*
         res.status(200).json({
             message: "Reply added successfully",
             status: true,
-            data: {
-                data: updated,
-            }
+            data: updated,
         });
     }
     catch (error) {
@@ -224,9 +220,7 @@ const toggleLikeComment = (req, res) => __awaiter(void 0, void 0, void 0, functi
         res.status(200).json({
             message: alreadyLiked ? "Comment unliked" : "Comment liked",
             status: true,
-            data: {
-                data: comment.likes.length,
-            }
+            data: comment.likes.length,
         });
     }
     catch (error) {
