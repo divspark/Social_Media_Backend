@@ -1,7 +1,6 @@
 import { Router } from "express";
 import {
   googleLoginOrCreate,
-  phoneLoginOrCreate,
   completeProfile,
   getOwnProfile,
   updateOwnProfile,
@@ -23,7 +22,6 @@ const router = Router();
 
 // Email & Phone Login (Auto Create if not exists)
 router.post("/email-login", googleLoginOrCreate);
-router.post("/phone-login", phoneLoginOrCreate);
 
 // Second Form - Complete Profile
 router.post("/complete-profile",verifyToken,upload.single("file"),checkFeatureAccess("profileUpdate"),completeProfile);

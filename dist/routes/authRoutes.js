@@ -12,7 +12,6 @@ const upload = (0, multer_1.default)({ storage });
 const router = (0, express_1.Router)();
 // Email & Phone Login (Auto Create if not exists)
 router.post("/email-login", authController_1.googleLoginOrCreate);
-router.post("/phone-login", authController_1.phoneLoginOrCreate);
 // Second Form - Complete Profile
 router.post("/complete-profile", middlewares_1.verifyToken, upload.single("file"), (0, middlewares_1.checkFeatureAccess)("profileUpdate"), authController_1.completeProfile);
 //Update profile later

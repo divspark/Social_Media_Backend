@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateUserRole = exports.getRestrictedUsers = exports.setUserRestrictions = exports.getBlockedUsers = exports.blockOrUnblockUser = exports.saveFcmToken = exports.getUserProfileByUID = exports.updateOwnProfile = exports.getOwnProfile = exports.completeProfile = exports.phoneLoginOrCreate = exports.googleLoginOrCreate = exports.JWT_SECRET = void 0;
+exports.updateUserRole = exports.getRestrictedUsers = exports.setUserRestrictions = exports.getBlockedUsers = exports.blockOrUnblockUser = exports.saveFcmToken = exports.getUserProfileByUID = exports.updateOwnProfile = exports.getOwnProfile = exports.completeProfile = exports.googleLoginOrCreate = exports.JWT_SECRET = void 0;
 const firebase_1 = __importDefault(require("../config/firebase"));
 const userModel_1 = __importDefault(require("../models/userModel"));
 const cloudinaryService_1 = require("../services/cloudinaryService");
@@ -66,39 +66,11 @@ const googleLoginOrCreate = (req, res) => __awaiter(void 0, void 0, void 0, func
         res.status(401).json({
             status: false,
             message: "Invalid token",
-            data: { data: { error: err } },
+            data: { error: err },
         });
     }
 });
 exports.googleLoginOrCreate = googleLoginOrCreate;
-// PHONE LOGIN or CREATE
-const phoneLoginOrCreate = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { idToken } = req.body;
-    if (!idToken) {
-        res.status(400).json({ status: false, message: "idToken is required" });
-        return;
-    }
-    try {
-        const decoded = yield firebase_1.default.auth().verifyIdToken(idToken);
-        const { uid } = decoded;
-        let user = yield userModel_1.default.findOne({ uid });
-        if (!user) {
-            user = yield userModel_1.default.create({
-                uid,
-                role: "pending"
-            });
-            res.status(201).json({ message: "New phone user created, please complete profile", status: true, data: { user, idToken } });
-            return;
-        }
-        const data = { idToken, user };
-        res.status(200).json({ message: `${user.role} phone login successful`, data, status: true });
-    }
-    catch (err) {
-        console.error("Phone login error:", err);
-        res.status(401).json({ message: "Invalid token", status: false, data: { data: { error: err } } });
-    }
-});
-exports.phoneLoginOrCreate = phoneLoginOrCreate;
 // COMPLETE PROFILE (Second Form)
 const completeProfile = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a, _b;
@@ -233,7 +205,7 @@ const getBlockedUsers = (_req, res) => __awaiter(void 0, void 0, void 0, functio
             blockReason: user.blockReason,
             blockedUntil: user.blockedUntil ? user.blockedUntil : "Permanent",
         }));
-        res.status(200).json({ status: true, message: "Blocked user fetched successfully", data: { data: formattedUsers } });
+        res.status(200).json({ status: true, message: "Blocked user fetched successfully", data: formattedUsers });
     }
     catch (err) {
         res.status(500).json({ status: false, message: "Failed to fetch blocked users", data: { error: err } });
@@ -299,9 +271,7 @@ const updateUserRole = (req, res) => __awaiter(void 0, void 0, void 0, function*
         res.status(200).json({
             message: "User role updated successfully",
             status: true,
-            data: {
-                data: updatedUser,
-            }
+            data: updatedUser,
         });
     }
     catch (err) {

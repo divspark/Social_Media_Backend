@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { sendOtpWhatsapp } from "../models/whatsappApi";
+import { sendOtpWhatsapp } from "../utils/whatsappApi";
 import { OTPModel } from "../models/whatsappOtpModel";
 import { generateOTP, canSendOtp } from "../utils/whatsappOtp";
 import User from "../models/userModel";

@@ -140,6 +140,18 @@ const createPost = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         const populatedPost = yield post.populate("adminId", "_id name photoURL");
         const postObj = populatedPost.toObject();
         const admin = postObj.adminId;
+        const users = yield userModel_1.default.find({ _id: { $ne: adminId } }, "fcmToken");
+        const allTokens = users
+            .map(u => { var _a; return (_a = u.fcmToken) === null || _a === void 0 ? void 0 : _a.trim(); })
+            .filter((token) => Boolean(token));
+        yield (0, sendNotification_1.sendNotificationToMany)(allTokens, "New Admin Post", `${admin.name} posted: ${content.slice(0, 50)}...`);
+        yield notificationModel_1.default.insertMany(users.map(u => ({
+            senderId: adminId,
+            receiverId: u._id,
+            type: "admin-post",
+            content: `${admin.name} posted: ${content.slice(0, 50)}...`,
+            postId: post._id,
+        })));
         res.status(201).json({
             message: "Post created successfully",
             status: true,
@@ -510,7 +522,7 @@ const deletePost = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
 exports.deletePost = deletePost;
 // Like / Unlike Post
 const toggleLikePost = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a, _b;
+    var _a, _b, _c;
     const { postId } = req.params;
     const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a._id;
     const objectUserId = new mongoose_1.default.Types.ObjectId(userId);
@@ -529,7 +541,7 @@ const toggleLikePost = (req, res) => __awaiter(void 0, void 0, void 0, function*
             // Notify Admin
             const adminUser = yield userModel_1.default.findById(post.adminId);
             if (adminUser === null || adminUser === void 0 ? void 0 : adminUser.fcmToken) {
-                yield (0, sendNotification_1.sendNotification)(adminUser.fcmToken, "New Like", "Someone liked your post");
+                yield (0, sendNotification_1.sendNotification)(adminUser.fcmToken, "New Like", `${(_c = req.user) === null || _c === void 0 ? void 0 : _c.name} Someone liked your post`);
             }
             yield notificationModel_1.default.create({
                 senderId: userId,
@@ -554,7 +566,7 @@ const toggleLikePost = (req, res) => __awaiter(void 0, void 0, void 0, function*
 exports.toggleLikePost = toggleLikePost;
 // Save / Unsave Post
 const toggleSavePost = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a, _b;
+    var _a, _b, _c;
     const { postId } = req.params;
     const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a._id;
     if (!userId) {
@@ -577,7 +589,7 @@ const toggleSavePost = (req, res) => __awaiter(void 0, void 0, void 0, function*
             // Notify Admin (only when saved)
             const adminUser = yield userModel_1.default.findById(post.adminId);
             if (adminUser === null || adminUser === void 0 ? void 0 : adminUser.fcmToken) {
-                yield (0, sendNotification_1.sendNotification)(adminUser.fcmToken, "Post Saved", "Someone saved your post");
+                yield (0, sendNotification_1.sendNotification)(adminUser.fcmToken, "Post Saved", `${(_c = req.user) === null || _c === void 0 ? void 0 : _c.name} Someone saved your post`);
             }
             yield notificationModel_1.default.create({
                 senderId: userId,

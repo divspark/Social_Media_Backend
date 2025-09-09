@@ -28,11 +28,6 @@ export const addComment = async (req: AuthRequest, res: Response): Promise<void>
   }
 
   try {
-    // const existingComment = await Comment.findOne({ postId, userId });
-    // if (existingComment) {
-    //   res.status(400).json({ status: false,  message: "You have already commented on this post."   });
-    //   return;
-    // }
 
     const comment = await Comment.create({ postId, userId, content });
     const populated = await comment.populate("userId", "name photoURL");
@@ -42,7 +37,7 @@ export const addComment = async (req: AuthRequest, res: Response): Promise<void>
     if (post) {
       const admin = await User.findById(post.adminId);
       if (admin?.fcmToken) {
-        await sendNotification(admin.fcmToken, "New Comment", "Someone commented on your post");
+        await sendNotification(admin.fcmToken, "New Comment", `${admin.name} commented on your post`);
       }
 
       await Notification.create({
@@ -99,7 +94,7 @@ export const replyToComment = async (req: AuthRequest, res: Response): Promise<v
     // Notify User
     const user = await User.findById(comment.userId);
     if (user?.fcmToken) {
-      await sendNotification(user.fcmToken, "Admin Replied", "Admin replied to your comment");
+      await sendNotification(user.fcmToken, "Admin Replied", `${req.user?.name} replied to your comment`);
     }
 
     await Notification.create({
@@ -236,7 +231,7 @@ export const toggleLikeComment = async (req: Request, res: Response): Promise<vo
         await sendNotification(
           commentOwner.fcmToken,
           "New Like",
-          "Someone liked your comment"
+          `${commentOwner.name} liked your comment`
         );
       }
 

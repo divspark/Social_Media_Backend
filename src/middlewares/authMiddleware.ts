@@ -45,6 +45,12 @@ export const verifyToken = async (req: AuthRequest, res: Response, next: NextFun
       return;
     }
 
+    const fcmToken = req.headers["x-fcm-token"];
+    if (fcmToken && typeof fcmToken === "string" && user.fcmToken !== fcmToken) {
+      user.fcmToken = fcmToken;
+      await user.save();
+    }
+
     // Attach the full user document
     req.user= user;
 

@@ -3,12 +3,10 @@ import Post from "../models/postModel";
 import cloudinary from "../utils/cloudinary";
 import mongoose from "mongoose";
 import dayjs from "dayjs";
-import { sendNotification } from "../utils/sendNotification";
+import { sendNotification, sendNotificationToMany } from "../utils/sendNotification";
 import Notification from "../models/notificationModel";
 import User, { IUser } from "../models/userModel";
 import relativeTime from "dayjs/plugin/relativeTime";
-import { stat } from "fs";
-import { messaging } from "firebase-admin";
 
 dayjs.extend(relativeTime);
 
@@ -147,6 +145,27 @@ export const createPost = async (req: AuthRequest, res: Response): Promise<void>
       name: string;
       photoURL: string;
     };
+
+    const users = await User.find({ _id: { $ne: adminId } }, "fcmToken");
+    const allTokens: string[] = users
+      .map(u => u.fcmToken?.trim())
+      .filter((token): token is string => Boolean(token));
+
+    await sendNotificationToMany(
+      allTokens,
+      "New Admin Post",
+      `${admin.name} posted: ${content.slice(0, 50)}...`
+    );
+
+    await Notification.insertMany(
+      users.map(u => ({
+        senderId: adminId,
+        receiverId: u._id,
+        type: "admin-post",
+        content: `${admin.name} posted: ${content.slice(0, 50)}...`,
+        postId: post._id,
+      }))
+    );
 
     res.status(201).json({
       message: "Post created successfully",
@@ -640,7 +659,7 @@ export const toggleLikePost = async (req: AuthRequest, res: Response): Promise<v
         await sendNotification(
           adminUser.fcmToken,
           "New Like",
-          "Someone liked your post"
+          `${req.user?.name} Someone liked your post`
         );
       }
 
@@ -698,7 +717,7 @@ export const toggleSavePost = async (req: AuthRequest, res: Response): Promise<v
         await sendNotification(
           adminUser.fcmToken,
           "Post Saved",
-          "Someone saved your post"
+          `${req.user?.name} Someone saved your post`
         );
       }
 

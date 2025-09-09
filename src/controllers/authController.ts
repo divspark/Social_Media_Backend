@@ -66,41 +66,11 @@ export const googleLoginOrCreate = async (req: Request, res: Response): Promise<
     res.status(401).json({
       status: false,
       message: "Invalid token",
-      data: { data: { error: err } },
+      data: { error: err },
     });
   }
 };
 
-// PHONE LOGIN or CREATE
-export const phoneLoginOrCreate = async (req: Request, res: Response): Promise<void> => {
-  const { idToken } = req.body;
-
-  if (!idToken) {
-    res.status(400).json({ status: false,  message: "idToken is required"   });
-    return;
-  }
-
-  try {
-    const decoded = await admin.auth().verifyIdToken(idToken);
-    const { uid } = decoded;
-
-    let user = await User.findOne({ uid });
-
-    if (!user) {
-      user = await User.create({
-        uid,
-        role: "pending"
-      });
-      res.status(201).json({ message: "New phone user created, please complete profile",status: true,data:{user, idToken} });
-      return;
-    }
-    const data = {idToken,user}
-    res.status(200).json({ message: `${user.role} phone login successful`, data,status: true });
-  } catch (err) {
-    console.error("Phone login error:", err);
-    res.status(401).json({ message: "Invalid token",status: false, data: { data: { error: err } } });
-  }
-};
 
 // COMPLETE PROFILE (Second Form)
 export const completeProfile = async (req: AuthRequest, res: Response): Promise<void> => {
@@ -270,7 +240,7 @@ export const getBlockedUsers = async (_req: Request, res: Response): Promise<voi
       blockedUntil: user.blockedUntil ? user.blockedUntil : "Permanent",
     }));
 
-    res.status(200).json({ status: true,message:"Blocked user fetched successfully", data:{ data: formattedUsers } });
+    res.status(200).json({ status: true,message:"Blocked user fetched successfully",data: formattedUsers});
   } catch (err) {
     res.status(500).json({ status: false,  message: "Failed to fetch blocked users", data: { error: err }   });
   }
@@ -349,9 +319,8 @@ export const updateUserRole = async (req: AuthRequest, res: Response): Promise<v
     res.status(200).json({
       message: "User role updated successfully",
       status: true,
-      data:{
       data: updatedUser,
-    }});
+    });
   } catch (err) {
     res.status(500).json({ status: false,  message: "Failed to update user role", data: { error: err }   });
   }

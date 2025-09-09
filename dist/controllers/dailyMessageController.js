@@ -30,14 +30,12 @@ const createDailyMessage = (req, res) => __awaiter(void 0, void 0, void 0, funct
             message: "Daily message created",
             status: true,
             data: {
-                data: {
-                    _id: newMessage._id,
-                    content: newMessage.content,
-                    postedBy: admin,
-                    date: (0, dayjs_1.default)(newMessage.createdAt).format("MMMM D, YYYY"),
-                    timeAgo: (0, dayjs_1.default)(newMessage.createdAt).fromNow(),
-                },
-            }
+                _id: newMessage._id,
+                content: newMessage.content,
+                postedBy: admin,
+                date: (0, dayjs_1.default)(newMessage.createdAt).format("MMMM D, YYYY"),
+                timeAgo: (0, dayjs_1.default)(newMessage.createdAt).fromNow(),
+            },
         });
     }
     catch (err) {
@@ -119,14 +117,12 @@ const updateDailyMessage = (req, res) => __awaiter(void 0, void 0, void 0, funct
             message: "Message updated",
             status: true,
             data: {
-                data: {
-                    _id: message._id,
-                    content: message.content,
-                    postedBy: message.adminId,
-                    date: (0, dayjs_1.default)(message.createdAt).format("MMMM D, YYYY"),
-                    timeAgo: (0, dayjs_1.default)(message.createdAt).fromNow(),
-                },
-            }
+                _id: message._id,
+                content: message.content,
+                postedBy: message.adminId,
+                date: (0, dayjs_1.default)(message.createdAt).format("MMMM D, YYYY"),
+                timeAgo: (0, dayjs_1.default)(message.createdAt).fromNow(),
+            },
         });
     }
     catch (error) {

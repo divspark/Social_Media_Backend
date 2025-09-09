@@ -1,5 +1,4 @@
 import axios from "axios";
-import { generateOTP } from "../utils/whatsappOtp";
 
 const wid = process.env.WID || "";
 const countryCode = process.env.COUNTRY_CODE || "";

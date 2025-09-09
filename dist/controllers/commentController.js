@@ -32,11 +32,6 @@ const addComment = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         return;
     }
     try {
-        // const existingComment = await Comment.findOne({ postId, userId });
-        // if (existingComment) {
-        //   res.status(400).json({ status: false,  message: "You have already commented on this post."   });
-        //   return;
-        // }
         const comment = yield commentModel_1.default.create({ postId, userId, content });
         const populated = yield comment.populate("userId", "name photoURL");
         // Notify Post Admin
@@ -44,7 +39,7 @@ const addComment = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         if (post) {
             const admin = yield userModel_1.default.findById(post.adminId);
             if (admin === null || admin === void 0 ? void 0 : admin.fcmToken) {
-                yield (0, sendNotification_1.sendNotification)(admin.fcmToken, "New Comment", "Someone commented on your post");
+                yield (0, sendNotification_1.sendNotification)(admin.fcmToken, "New Comment", `${admin.name} commented on your post`);
             }
             yield notificationModel_1.default.create({
                 senderId: userId,
@@ -67,7 +62,7 @@ const addComment = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
 exports.addComment = addComment;
 // Admin Reply to a Comment (Only once)
 const replyToComment = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a, _b, _c;
+    var _a, _b, _c, _d;
     const { commentId } = req.params;
     const { content } = req.body;
     const adminId = (_a = req.user) === null || _a === void 0 ? void 0 : _a._id;
@@ -94,7 +89,7 @@ const replyToComment = (req, res) => __awaiter(void 0, void 0, void 0, function*
         // Notify User
         const user = yield userModel_1.default.findById(comment.userId);
         if (user === null || user === void 0 ? void 0 : user.fcmToken) {
-            yield (0, sendNotification_1.sendNotification)(user.fcmToken, "Admin Replied", "Admin replied to your comment");
+            yield (0, sendNotification_1.sendNotification)(user.fcmToken, "Admin Replied", `${(_d = req.user) === null || _d === void 0 ? void 0 : _d.name} replied to your comment`);
         }
         yield notificationModel_1.default.create({
             senderId: adminId,
@@ -207,7 +202,7 @@ const toggleLikeComment = (req, res) => __awaiter(void 0, void 0, void 0, functi
             // Notify comment owner
             const commentOwner = yield userModel_1.default.findById(comment.userId);
             if (commentOwner && commentOwner.fcmToken) {
-                yield (0, sendNotification_1.sendNotification)(commentOwner.fcmToken, "New Like", "Someone liked your comment");
+                yield (0, sendNotification_1.sendNotification)(commentOwner.fcmToken, "New Like", `${commentOwner.name} liked your comment`);
             }
             yield notificationModel_1.default.create({
                 senderId: userObjectId,

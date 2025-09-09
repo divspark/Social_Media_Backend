@@ -15,7 +15,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.sendOtp = sendOtp;
 exports.verifyOtpController = verifyOtpController;
 exports.logoutController = logoutController;
-const whatsappApi_1 = require("../models/whatsappApi");
+const whatsappApi_1 = require("../utils/whatsappApi");
 const whatsappOtpModel_1 = require("../models/whatsappOtpModel");
 const whatsappOtp_1 = require("../utils/whatsappOtp");
 const userModel_1 = __importDefault(require("../models/userModel"));

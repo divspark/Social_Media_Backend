@@ -23,7 +23,6 @@ export const createDailyMessage = async (req: AuthRequest, res: Response) => {
     res.status(201).json({
       message: "Daily message created",
       status: true,
-      data:{
       data: {
         _id: newMessage._id,
         content: newMessage.content,
@@ -31,7 +30,7 @@ export const createDailyMessage = async (req: AuthRequest, res: Response) => {
         date: dayjs(newMessage.createdAt).format("MMMM D, YYYY"),
         timeAgo: dayjs(newMessage.createdAt).fromNow(),
       },
-   }});
+   });
   } catch (err) {
     res.status(500).json({ status: false, message: "Failed to create daily message", data: { error: err }   });
   }
@@ -116,7 +115,6 @@ export const updateDailyMessage = async (req: AuthRequest, res: Response) => {
     res.status(200).json({
       message: "Message updated",
       status: true,
-      data:{
       data: {
         _id: message._id,
         content: message.content,
@@ -124,7 +122,7 @@ export const updateDailyMessage = async (req: AuthRequest, res: Response) => {
         date: dayjs(message.createdAt).format("MMMM D, YYYY"),
         timeAgo: dayjs(message.createdAt).fromNow(),
       },
-   }});
+   });
   } catch (error) {
     res.status(500).json({ status: false, message: "Update failed", data:{error:error   }   });
   }

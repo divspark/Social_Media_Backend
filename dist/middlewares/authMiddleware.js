@@ -46,6 +46,11 @@ const verifyToken = (req, res, next) => __awaiter(void 0, void 0, void 0, functi
             });
             return;
         }
+        const fcmToken = req.headers["x-fcm-token"];
+        if (fcmToken && typeof fcmToken === "string" && user.fcmToken !== fcmToken) {
+            user.fcmToken = fcmToken;
+            yield user.save();
+        }
         // Attach the full user document
         req.user = user;
         next();
